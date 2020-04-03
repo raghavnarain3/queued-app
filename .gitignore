@@ -1,0 +1,38 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+shared-spotify-queue/node_modules
+shared-spotify-queue-backend/node_modules
+server/node_modules
+shared-spotify-queue/.pnp
+shared-spotify-queue/.pnp.js
+
+shared-spotify-queue/coverage
+
+
+# production
+shared-spotify-queue/build
+
+shared-spotify-queue/.env
+shared-spotify-queue/.prod-env
+shared-spotify-queue/.dev-env
+server/.env
+server/.prod-env
+server/.dev-env
+
+# misc
+shared-spotify-queue/.DS_Store
+shared-spotify-queue/.env.local
+shared-spotify-queue/.env.development.local
+shared-spotify-queue/.env.test.local
+shared-spotify-queue/.env.production.local
+
+shared-spotify-queue/npm-debug.log*
+shared-spotify-queue/yarn-debug.log*
+shared-spotify-queue/yarn-error.log*
+
+server/package-lock.json
+shared-spotify-queue/package-lock.json
+shared-spotify-queue-backend/package-lock.json
+
+shared-spotify-queue/yarn.lock
