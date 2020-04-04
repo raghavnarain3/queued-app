@@ -1,7 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const pino = require('express-pino-logger')();
-require('dotenv').config()
+require('dotenv').config({path: __dirname+'/.env'})
 const request = require('request');
 const io = require('socket.io-client');
 var socket = io.connect(process.env.REACT_APP_SOCKET);

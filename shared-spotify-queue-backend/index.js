@@ -1,5 +1,5 @@
 
-var io = require('socket.io')(80, {
+var io = require('socket.io')(3002, {
   pingTimeout: 60000,
 });
 const request = require('request');
