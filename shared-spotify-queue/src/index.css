@@ -6,6 +6,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-size: 10%;
 }
 
 html {
@@ -22,7 +23,16 @@ code {
   flex-direction: column;
   width:100%;
   height: 100%;
-  justify-content: center;
+  justify-content: safe center;
+  align-items: safe center;
+}
+
+.flex-scrollable {
+  display: flex;
+  flex-direction: column;
+  width:100%;
+  height: 45%;
+  overflow-y:auto;
   align-items: center;
 }
 
@@ -38,6 +48,7 @@ code {
 
 .select {
   width: 50%;
+  min-width: 350px;
 }
 
 .item {
@@ -53,9 +64,17 @@ code {
   margin-top: 10px;
   display: flex;
   flex-direction: row;
-  height:50px;
   width: 50%;
+  min-width: 350px;
   align-items: center;
-  border: 1px solid grey;
+  border-color: hsl(0,0%,80%);
+  border-radius: 4px;
+  border-style: solid;
+  border-width: 1px;
+}
+
+.album {
+  margin: 5px 15px 5px 5px;
+  border-radius: 4px;
 }
 

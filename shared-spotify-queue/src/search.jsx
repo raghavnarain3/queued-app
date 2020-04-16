@@ -38,7 +38,7 @@ class Search extends React.Component {
       .then(json => {
         console.log(json["tracks"]["items"])
         return json["tracks"]["items"].map((item) => (
-          { value: item["name"], label: item["name"], uri: item["uri"] }
+          { value: item["name"], label: item["name"], artist: item["artists"][0]["name"], uri: item["uri"], image: item["album"]["images"][2]["url"],  }
         ))
       })
   }
@@ -63,16 +63,18 @@ class Search extends React.Component {
     console.log(selectedOptions)
   	return (
       <div className={"flex-container"}>
-        <h3>Welcome to room: {room}</h3>
-        <h3>Current Song: {currentSong}</h3>
-        <h3>Search for a song...</h3>
+        <div>Welcome to room: {room}</div>
+        <div>Current Song: {currentSong}</div>
+        <div>Search for a song...</div>
 		    <AsyncSelect className="select"
                 loadOptions={this.loadOptions}
                 onChange={this.onChange}
         />
-        {selectedOptions.map((value) => {
-          return <div className={"flex-item"}>{value["value"]}</div>
-        })}
+        <div className={"flex-scrollable"}>
+          {selectedOptions.map((value) => {
+            return <div className={"flex-item"}><img className={"album"} src={value["image"]}></img><div><div>{value["value"]}</div><div>{value["artist"]}</div></div></div>
+          })}
+        </div>
         <Button variant="danger" className="flex-button" onClick={this.deleteRoom}>Delete Room</Button>
       </div>
     )
