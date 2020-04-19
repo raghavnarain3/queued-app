@@ -29,10 +29,11 @@ code {
 .flex-scrollable {
   display: flex;
   flex-direction: column;
-  width:100%;
+  width: 50%;
   height: 45%;
-  overflow-y:auto;
+  overflow-y: auto;
   align-items: center;
+  min-width: 350px;
 }
 
 .lower-case {
@@ -59,11 +60,29 @@ code {
 
 }
 
+.now-playing {
+  width: 50%;
+  min-width: 350px;
+}
+
+.progress-div {
+  width: 100%;
+  padding: 5px 6px 5px 0px;
+}
+
+.song-info {
+  width: 100%;
+}
+
+.progress {
+  height: .12rem;
+}
+
 .flex-item {
   margin-top: 10px;
   display: flex;
   flex-direction: row;
-  width: 50%;
+  width: 100%;
   min-width: 350px;
   align-items: center;
   border-color: hsl(0,0%,80%);

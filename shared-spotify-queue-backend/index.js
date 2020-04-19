@@ -20,7 +20,7 @@ io.on('connection', function (socket) {
 
     room_to_creds[room] = {access_token: access_token, refresh_token: refresh_token}
     if (!(room in room_to_queue)) {
-      room_to_queue[room] = {currently_playing: "", queue: [], current_song: ""}
+      room_to_queue[room] = {currently_playing: {}, queue: []}
     }
   });
 
@@ -56,7 +56,7 @@ io.on('connection', function (socket) {
     delete room_to_queue[room]
     delete room_to_creds[room]
     console.log("deleted room " + room);
-    io.in(room).emit('queue', {currently_playing: "", queue: [], current_song: ""});
+    io.in(room).emit('queue', {currently_playing: {}, queue: []});
   });
 
   socket.on('disconnect', function () {
@@ -69,7 +69,7 @@ setInterval(() => {
     for (const room in room_to_queue) {
       queue = room_to_queue[room]["queue"]
 
-      if (queue !== undefined && queue.length > 0) {
+      if (queue !== undefined) {
         const req = {
           url: 'https://api.spotify.com/v1/me/player/currently-playing',
           headers: {
@@ -82,8 +82,14 @@ setInterval(() => {
           try {
             if (!error && response.statusCode === 200) {
               currently_playing_song = body["item"]["uri"];
-              is_not_playing = (body["is_playing"] === false && body["progress_ms"] === 0)
-              if (currently_playing_song !== room_to_queue[room]["currently_playing"] || is_not_playing) {
+              progress = body["progress_ms"];
+              if (room_to_queue[room]["currently_playing"] != undefined) {
+                room_to_queue[room]["currently_playing"]["progress"] = progress
+              }
+              is_not_playing = (body["is_playing"] === false && progress === 0)
+              io.in(room).emit('queue', room_to_queue[room])
+
+              if (queue.length > 0 && currently_playing_song !== room_to_queue[room]["currently_playing"]["uri"] || is_not_playing) {
                 next_track = room_to_queue[room]["queue"].shift()
                 console.log(next_track)
                 if(next_track) {
@@ -101,8 +107,7 @@ setInterval(() => {
                     try {
                       if (!error && response.statusCode === 204) {
                         if (room in room_to_queue) {
-                          room_to_queue[room]["currently_playing"] = next_track["uri"]
-                          room_to_queue[room]["current_song"] = next_track["label"]
+                          room_to_queue[room]["currently_playing"] = next_track
                           console.log(room_to_queue[room])
                           io.in(room).emit('queue', room_to_queue[room]);
                         }

@@ -1,6 +1,7 @@
 import React from 'react'
 import Select from 'react-select'
 import Button from 'react-bootstrap/Button';
+import ProgressBar from 'react-bootstrap/ProgressBar'
 import AsyncSelect from 'react-select/async'
 import socketIOClient from "socket.io-client";
 
@@ -23,7 +24,7 @@ class Search extends React.Component {
     });
     socket.on('queue', data => {
       console.log(data)
-      this.setState({ selectedOptions: data["queue"], currentSong: data["current_song"] });
+      this.setState({ selectedOptions: data["queue"], currentSong: data["currently_playing"] });
     });
     this.setState({ socket: socket });
   }
@@ -38,7 +39,7 @@ class Search extends React.Component {
       .then(json => {
         console.log(json["tracks"]["items"])
         return json["tracks"]["items"].map((item) => (
-          { value: item["name"], label: item["name"], artist: item["artists"][0]["name"], uri: item["uri"], image: item["album"]["images"][2]["url"],  }
+          { value: item["name"], label: item["name"], artist: item["artists"][0]["name"], uri: item["uri"], image: item["album"]["images"][2]["url"], duration: item["duration_ms"], progress: 0 }
         ))
       })
   }
@@ -60,11 +61,23 @@ class Search extends React.Component {
   render() {
     const { room } = this.props.match.params
     const { selectedOptions, currentSong } = this.state
-    console.log(selectedOptions)
+    //console.log(selectedOptions)
+    //console.log(currentSong)
   	return (
       <div className={"flex-container"}>
         <div>Welcome to room: {room}</div>
-        <div>Current Song: {currentSong}</div>
+        <div className={"now-playing"}>
+          <div className={"flex-item"}>
+            <img className={"album"} src={currentSong["image"]}></img>
+            <div className={"song-info"}>
+              <div>{currentSong["value"]}</div>
+              <div>{currentSong["artist"]}</div>
+              <div className={"progress-div"}>
+                <ProgressBar variant="info" now={(currentSong["progress"]/currentSong["duration"])*100} />
+              </div>
+            </div>
+          </div>
+        </div>
         <div>Search for a song...</div>
 		    <AsyncSelect className="select"
                 loadOptions={this.loadOptions}
