@@ -74,6 +74,34 @@ code {
   width: 100%;
 }
 
+.player-details {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.controls {
+  margin-right: 20px;
+  width: 50px;
+}
+
+.play {
+  margin-right: 20px;
+  cursor: pointer;
+}
+
+.play:hover {
+    color: hsl(0,0%,80%);
+}
+
+.next {
+  cursor: pointer;
+}
+
+.next:hover {
+    color: hsl(0,0%,80%);
+}
+
 .progress {
   height: .12rem;
 }
@@ -83,6 +111,7 @@ code {
   display: flex;
   flex-direction: row;
   width: 100%;
+  min-height: 86px;
   min-width: 350px;
   align-items: center;
   border-color: hsl(0,0%,80%);
@@ -94,5 +123,7 @@ code {
 .album {
   margin: 5px 15px 5px 5px;
   border-radius: 4px;
+  width: 64px;
+  height: 64px;
 }
 
