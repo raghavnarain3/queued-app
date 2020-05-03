@@ -11,7 +11,7 @@ import { faPlay, faPause, faForward } from '@fortawesome/free-solid-svg-icons'
 class Search extends React.Component {
   state = {
     selectedOptions: [],
-    currentSong: "",
+    currentSong: {},
     endpoint: process.env.REACT_APP_SOCKET,
     socket: null,
   }
@@ -26,7 +26,6 @@ class Search extends React.Component {
       console.log(data + " joined!")
     });
     socket.on('queue', data => {
-      console.log(data)
       this.setState({ selectedOptions: data["queue"], currentSong: data["currently_playing"] });
     });
     this.setState({ socket: socket });
@@ -34,7 +33,7 @@ class Search extends React.Component {
 
   loadOptions = (inputValue) => {
     const { access_key } = this.props.match.params
-    console.log(access_key)
+
     return fetch('https://api.spotify.com/v1/search' + '?q=' + inputValue + '&type=track', {
       headers: { 'Authorization': 'Bearer ' + access_key },
     })
@@ -59,6 +58,8 @@ class Search extends React.Component {
     const { socket } = this.state;
     var message = {room: room}
     socket.emit('delete room', message)
+    this.props.history.push('/')
+
   }
 
   getIcon = () => {
@@ -88,37 +89,48 @@ class Search extends React.Component {
     socket.emit('next', message)
   }
 
+  showNowPlaying = () => {
+    const { currentSong } = this.state
+    if ("image" in currentSong) {
+      return true
+    } else {
+      return false
+    }
+  }
+
   render() {
     const { room } = this.props.match.params
     const { selectedOptions, currentSong } = this.state
   	return (
       <div className={"flex-container"}>
         <div>Room: <b>{room}</b></div>
-        <div className={"now-playing"}>
-          <div className={"flex-item"}>
-            <img className={"album"} src={currentSong["image"]}></img>
-            <div className={"song-info"}>
-              <div className={"player-details"}>
-                <div>
-                  <div>{currentSong["value"]}</div>
-                  <div>{currentSong["artist"]}</div>
+        {this.showNowPlaying() && (
+          <div className={"now-playing"}>
+            <div className={"flex-item"}>
+              <img className={"album"} src={currentSong["image"]}></img>
+              <div className={"song-info"}>
+                <div className={"player-details"}>
+                  <div>
+                    <div>{currentSong["value"]}</div>
+                    <div>{currentSong["artist"]}</div>
+                  </div>
+                  <div className={"controls"}>
+                    <span className={"play"} onClick={this.playOrPause}>
+                      <FontAwesomeIcon icon={currentSong["is_playing"] ? faPause : faPlay} />
+                    </span>
+                    <span className={"next"} onClick={this.nextSong}>
+                      <FontAwesomeIcon icon={faForward} />
+                    </span>
+                  </div>
                 </div>
-                <div className={"controls"}>
-                  <span className={"play"} onClick={this.playOrPause}>
-                    <FontAwesomeIcon icon={currentSong["is_playing"] ? faPause : faPlay} />
-                  </span>
-                  <span className={"next"} onClick={this.nextSong}>
-                    <FontAwesomeIcon icon={faForward} />
-                  </span>
-                </div>
-              </div>
 
-              <div className={"progress-div"}>
-                <ProgressBar variant="info" now={(currentSong["progress"]/currentSong["duration"])*100} />
+                <div className={"progress-div"}>
+                  <ProgressBar variant="info" now={(currentSong["progress"]/currentSong["duration"])*100} />
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
         <div>Search for a song...</div>
 		    <AsyncSelect className="select"
                 loadOptions={this.loadOptions}
