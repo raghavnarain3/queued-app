@@ -99,6 +99,13 @@ code {
   }
 }
 
+.play:active {
+  color: hsl(0,0%,80%);
+}
+.next:active {
+  color: hsl(0,0%,80%);
+}
+
 .next {
   cursor: pointer;
 }
