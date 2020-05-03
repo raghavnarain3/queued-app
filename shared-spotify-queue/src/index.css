@@ -90,16 +90,17 @@ code {
   cursor: pointer;
 }
 
-.play:hover {
+@media(hover: hover) and (pointer: fine) {
+  .play:hover {
     color: hsl(0,0%,80%);
+  }
+  .next:hover {
+    color: hsl(0,0%,80%);
+  }
 }
 
 .next {
   cursor: pointer;
-}
-
-.next:hover {
-    color: hsl(0,0%,80%);
 }
 
 .progress {

@@ -6,7 +6,7 @@ class CreatedRoom extends React.Component {
     const { room } = this.props.match.params
   	return (
       <div className={"flex-container"}>
-        <h3>Your room was created! The room code is {room}</h3>
+        <div>Your room was created! The room code is <b>{room}</b></div>
         <Button className="flex-button" href={process.env.REACT_APP_BACKEND_URL + "/login?room=" + room}>Join the Room!</Button>
       </div>
     )

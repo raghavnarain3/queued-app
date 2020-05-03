@@ -4,6 +4,7 @@ import Button from 'react-bootstrap/Button';
 import ProgressBar from 'react-bootstrap/ProgressBar'
 import AsyncSelect from 'react-select/async'
 import socketIOClient from "socket.io-client";
+import Fade from 'react-bootstrap/Fade'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlay, faPause, faForward } from '@fortawesome/free-solid-svg-icons'
 
@@ -92,7 +93,7 @@ class Search extends React.Component {
     const { selectedOptions, currentSong } = this.state
   	return (
       <div className={"flex-container"}>
-        <div>Welcome to room: {room}</div>
+        <div>Room: <b>{room}</b></div>
         <div className={"now-playing"}>
           <div className={"flex-item"}>
             <img className={"album"} src={currentSong["image"]}></img>
@@ -125,7 +126,7 @@ class Search extends React.Component {
         />
         <div className={"flex-scrollable"}>
           {selectedOptions.map((value) => {
-            return <div className={"flex-item"}><img className={"album"} src={value["image"]}></img><div><div>{value["value"]}</div><div>{value["artist"]}</div></div></div>
+            return <Fade appear={true} in={true}><div className={"flex-item"}><img className={"album"} src={value["image"]}></img><div><div>{value["value"]}</div><div>{value["artist"]}</div></div></div></Fade>
           })}
         </div>
         <Button variant="danger" className="flex-button" onClick={this.deleteRoom}>Delete Room</Button>
