@@ -71,7 +71,7 @@ io.on('connection', function (socket) {
       }
       request.put(req, function(error, response, body) {
         if(error || response.statusCode != 204) {
-          console.log(error);
+          console.log("pause " + error);
         }
       })
     }
@@ -89,7 +89,7 @@ io.on('connection', function (socket) {
       }
       request.put(req, function(error, response, body) {
         if (error || response.statusCode != 204) {
-          console.log(error);
+          console.log("play ", error);
         }
       })
     }
@@ -130,16 +130,15 @@ setInterval(() => {
               currently_playing_song = body["item"]["uri"];
               progress = body["progress_ms"];
               is_playing = body["is_playing"]
+              is_not_playing = (is_playing === false && progress === 0)
               if (room_to_queue[room]["currently_playing"] != undefined) {
                 room_to_queue[room]["currently_playing"]["progress"] = progress
                 room_to_queue[room]["currently_playing"]["is_playing"] = is_playing
               }
-              is_not_playing = (is_playing === false && progress === 0)
               io.in(room).emit('queue', room_to_queue[room])
-
-              if (queue.length > 0 && (currently_playing_song !== room_to_queue[room]["currently_playing"]["uri"] || is_not_playing || room_to_queue[room]["currently_playing"]["next"])) {
+              console.log("room_to_queue " + room + " " + room_to_queue[room])
+              if (queue.length > 0 && (is_not_playing || (room_to_queue[room]["currently_playing"] && (currently_playing_song !== room_to_queue[room]["currently_playing"]["uri"])) || (room_to_queue[room]["currently_playing"] && room_to_queue[room]["currently_playing"]["next"]))) {
                 next_track = room_to_queue[room]["queue"].shift()
-                console.log(next_track)
                 if(next_track) {
                   const new_song_req = {
                     url: 'https://api.spotify.com/v1/me/player/play',
@@ -156,25 +155,24 @@ setInterval(() => {
                       if (!error && response.statusCode === 204) {
                         if (room in room_to_queue) {
                           room_to_queue[room]["currently_playing"] = next_track
-                          console.log(room_to_queue[room])
                           io.in(room).emit('queue', room_to_queue[room]);
                         }
                       }
                       console.log(response.statusCode)
                     } catch (err) {
-                      console.log(err)
+                      console.log("error from play next " + err)
                     }
                   })
                 }
               }
             }
           } catch (err) {
-            console.log(err)
+            console.log("error from current song " + err)
           }
         })
       }
     }
   } catch (err) {
-    console.log(err)
+    console.log("error from setInterval " + err)
   };
 }, 1000)

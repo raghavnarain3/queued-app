@@ -1,19 +1,39 @@
 import React from 'react'
 import Select from 'react-select'
 import Button from 'react-bootstrap/Button';
+import Toast from 'react-bootstrap/Toast'
+import Nav from 'react-bootstrap/Nav'
+import FormControl from 'react-bootstrap/FormControl'
 import ProgressBar from 'react-bootstrap/ProgressBar'
 import AsyncSelect from 'react-select/async'
 import socketIOClient from "socket.io-client";
 import Fade from 'react-bootstrap/Fade'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPlay, faPause, faForward } from '@fortawesome/free-solid-svg-icons'
+import { faPlay, faPause, faForward, faPlus } from '@fortawesome/free-solid-svg-icons'
 
 class Search extends React.Component {
   state = {
     selectedOptions: [],
+    showSearch: true,
     currentSong: {},
     endpoint: process.env.REACT_APP_SOCKET,
     socket: null,
+    query: "",
+    searchResults: [],
+    show: false,
+    queuedSong: "",
+  }
+
+  constructor() {
+    super()
+    this.textInput = React.createRef();
+  }
+
+
+  handleChange() {
+    this.setState({ query: this.textInput.current.value }, () => {
+      this.search();
+    })
   }
 
   componentWillMount() {
@@ -46,11 +66,38 @@ class Search extends React.Component {
       })
   }
 
+  search = () => {
+    const { access_key } = this.props.match.params
+    const { query } = this.state
+
+    let results = fetch('https://api.spotify.com/v1/search' + '?q=' + query + '&type=track', {
+      headers: { 'Authorization': 'Bearer ' + access_key },
+    })
+      .then(response => response.json())
+      .then(json => {
+        if (json["tracks"]) {
+          let results = json["tracks"]["items"].map((item) => (
+            { value: item["name"], label: item["name"], artist: item["artists"][0]["name"], uri: item["uri"], image: item["album"]["images"][0]["url"], duration: item["duration_ms"], progress: 0, is_playing: true }
+          ))
+          this.setState({ searchResults: results })
+        } else {
+          this.setState({ searchResults: [] })
+        }
+      })
+  }
+
+  handleKeyPress = (event) => {
+    if (event.key === "Enter") {
+      this.search();
+    }
+  }
+
   onChange = (selectedOption) => {
     const { room } = this.props.match.params
     const { socket } = this.state;
     var message = {room: room, selectedOption: selectedOption}
     socket.emit('add', message);
+    this.setState({ queuedSong: selectedOption["value"], show: true })
   }
 
   deleteRoom = () => {
@@ -60,10 +107,6 @@ class Search extends React.Component {
     socket.emit('delete room', message)
     this.props.history.push('/')
 
-  }
-
-  getIcon = () => {
-    return faPlay;
   }
 
   playOrPause = () => {
@@ -98,12 +141,57 @@ class Search extends React.Component {
     }
   }
 
+  switchViews = (selectedKey) => {
+    if (selectedKey == "queue") {
+      this.setState({ showSearch: false });
+    } else {
+      this.setState({ showSearch: true });
+    }
+  }
+
+  stopShow = () => {
+    console.log("stop show!")
+    this.setState({ show: false })
+  }
+
   render() {
     const { room } = this.props.match.params
-    const { selectedOptions, currentSong } = this.state
+    const { selectedOptions, currentSong, showSearch, query, searchResults, show, queuedSong } = this.state
   	return (
       <div className={"flex-container"}>
+        <Toast onClose={() => this.stopShow()} show={show} delay={1000} autohide>
+          <Toast.Header>
+            <div>Added <strong>{queuedSong}</strong> to queue</div>
+          </Toast.Header>
+        </Toast>
         <div>Room: <b>{room}</b></div>
+        {!this.showNowPlaying() && (
+          <div className={"now-playing"}>
+            <div className={"flex-item"}>
+              <img className={"album"}></img>
+              <div className={"song-info"}>
+                <div className={"player-details"}>
+                  <div>
+                    <div>Add a song to the queue to start playback!</div>
+                    <div>-</div>
+                  </div>
+                  <div className={"controls"}>
+                    <span className={"play"} onClick={this.playOrPause}>
+                      <FontAwesomeIcon icon={currentSong["is_playing"] ? faPause : faPlay} />
+                    </span>
+                    <span className={"control-fa"} onClick={this.nextSong}>
+                      <FontAwesomeIcon icon={faForward} />
+                    </span>
+                  </div>
+                </div>
+
+                <div className={"progress-div"}>
+                  <ProgressBar />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         {this.showNowPlaying() && (
           <div className={"now-playing"}>
             <div className={"flex-item"}>
@@ -118,7 +206,7 @@ class Search extends React.Component {
                     <span className={"play"} onClick={this.playOrPause}>
                       <FontAwesomeIcon icon={currentSong["is_playing"] ? faPause : faPlay} />
                     </span>
-                    <span className={"next"} onClick={this.nextSong}>
+                    <span className={"control-fa"} onClick={this.nextSong}>
                       <FontAwesomeIcon icon={faForward} />
                     </span>
                   </div>
@@ -131,16 +219,46 @@ class Search extends React.Component {
             </div>
           </div>
         )}
-        <div>Search for a song...</div>
-		    <AsyncSelect className="select"
-                loadOptions={this.loadOptions}
-                onChange={this.onChange}
-        />
-        <div className={"flex-scrollable"}>
-          {selectedOptions.map((value) => {
-            return <Fade appear={true} in={true}><div className={"flex-item"}><img className={"album"} src={value["image"]}></img><div><div>{value["value"]}</div><div>{value["artist"]}</div></div></div></Fade>
-          })}
-        </div>
+        <Nav justify variant="pills" defaultActiveKey="search" onSelect={(selectedKey) => this.switchViews(selectedKey)}>
+          <Nav.Item>
+            <Nav.Link eventKey="search">Search</Nav.Link>
+          </Nav.Item>
+          <Nav.Item>
+            <Nav.Link eventKey="queue">Queue</Nav.Link>
+          </Nav.Item>
+        </Nav>
+        {showSearch ? (
+          <div className={"flex-scrollable"}>
+            <div>Search for a song...</div>
+            <FormControl className="query" ref={this.textInput} type="text" placeholder="Search for a song..." defaultValue={query} onKeyPress={this.handleKeyPress} onChange={() => this.handleChange()} />
+            {searchResults.map((value) => {
+              return <Fade appear={true} in={true}>
+                <div className={"flex-item"}>
+                  <img className={"album"} src={value["image"]}></img>
+                  <div className={"song-info"}>
+                    <div className={"player-details"}>
+                      <div>
+                        <div>{value["value"]}</div>
+                        <div>{value["artist"]}</div>
+                      </div>
+                      <div className={"addButton"}>
+                        <span className={"control-fa"} onClick={() => this.onChange(value)}>
+                          <FontAwesomeIcon icon={faPlus} />
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Fade>
+            })}
+          </div>
+        ) : (
+         <div className={"flex-scrollable"}>
+            {selectedOptions.map((value) => {
+              return <Fade appear={true} in={true}><div className={"flex-item"}><img className={"album"} src={value["image"]}></img><div><div>{value["value"]}</div><div>{value["artist"]}</div></div></div></Fade>
+            })}
+          </div>
+        )}
         <Button variant="danger" className="flex-button" onClick={this.deleteRoom}>Delete Room</Button>
       </div>
     )
