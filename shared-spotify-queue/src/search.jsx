@@ -150,7 +150,6 @@ class Search extends React.Component {
   }
 
   stopShow = () => {
-    console.log("stop show!")
     this.setState({ show: false })
   }
 
@@ -159,7 +158,7 @@ class Search extends React.Component {
     const { selectedOptions, currentSong, showSearch, query, searchResults, show, queuedSong } = this.state
   	return (
       <div className={"flex-container"}>
-        <Toast onClose={() => this.stopShow()} show={show} delay={1000} autohide>
+        <Toast onClose={this.stopShow} show={show} delay={1000} autohide>
           <Toast.Header>
             <div>Added <strong>{queuedSong}</strong> to queue</div>
           </Toast.Header>
@@ -229,7 +228,6 @@ class Search extends React.Component {
         </Nav>
         {showSearch ? (
           <div className={"flex-scrollable"}>
-            <div>Search for a song...</div>
             <FormControl className="query" ref={this.textInput} type="text" placeholder="Search for a song..." defaultValue={query} onKeyPress={this.handleKeyPress} onChange={() => this.handleChange()} />
             {searchResults.map((value) => {
               return <Fade appear={true} in={true}>
