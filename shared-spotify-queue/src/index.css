@@ -143,6 +143,7 @@ code {
   width: 50%;
   min-width: 350px;
   margin-top: 5px;
+  margin-bottom: 5px;
 }
 
 .nav-link {
@@ -151,5 +152,9 @@ code {
 
 .nav-pills .nav-link.active {
   background-color: #17a2b8!important;
+}
+
+.query {
+  min-height: 40px;
 }
 

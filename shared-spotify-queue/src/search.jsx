@@ -88,7 +88,7 @@ class Search extends React.Component {
 
   handleKeyPress = (event) => {
     if (event.key === "Enter") {
-      this.search();
+      this.textInput.current.blur()
     }
   }
 
@@ -160,7 +160,7 @@ class Search extends React.Component {
       <div className={"flex-container"}>
         <Toast onClose={this.stopShow} show={show} delay={1000} autohide>
           <Toast.Header>
-            <div>Added <strong>{queuedSong}</strong> to queue</div>
+            <div>Added <strong>{queuedSong}</strong> to the queue!</div>
           </Toast.Header>
         </Toast>
         <div>Room: <b>{room}</b></div>
