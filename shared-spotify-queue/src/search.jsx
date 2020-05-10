@@ -173,13 +173,11 @@ class Search extends React.Component {
   }
 
   switchViews = (selectedKey) => {
-    if (selectedKey == "queue") {
-      this.setState({ tabName: "queue" });
-    } else if (selectedKey == "search") {
-      this.setState({ tabName: "search" });
-    } else if (selectedKey == "playlists") {
+    if (selectedKey == "playlists") {
       this.getPlaylists()
       this.setState({ tabName: "playlists" });
+    } else {
+      this.setState({ tabName: selectedKey });
     }
   }
 
@@ -205,7 +203,7 @@ class Search extends React.Component {
               <div className={"song-info"}>
                 <div className={"player-details"}>
                   <div>
-                    <div>Add a song to the queue to start playback!</div>
+                    <div>-</div>
                     <div>-</div>
                   </div>
                   <div className={"controls"}>
@@ -262,6 +260,9 @@ class Search extends React.Component {
           <Nav.Item>
             <Nav.Link eventKey="queue">Queue</Nav.Link>
           </Nav.Item>
+          <Nav.Item>
+            <Nav.Link eventKey="settings">Settings</Nav.Link>
+          </Nav.Item>
         </Nav>
         {tabName === "search" && (
           <div className="full-div">
@@ -278,7 +279,7 @@ class Search extends React.Component {
                           <div>{value["artist"]}</div>
                         </div>
                         <div className={"addButton"}>
-                          <span className={"control-fa"} onClick={() => this.onChange(value)}>
+                          <span className={"control-fa"}>
                             <FontAwesomeIcon icon={faPlus} />
                           </span>
                         </div>
@@ -307,7 +308,7 @@ class Search extends React.Component {
                                   <div>{value["artist"]}</div>
                                 </div>
                                 <div className={"addButton"}>
-                                  <span className={"control-fa"} onClick={() => {}}>
+                                  <span className={"control-fa"}>
                                     <FontAwesomeIcon icon={faAngleDown} />
                                   </span>
                                 </div>
@@ -329,7 +330,7 @@ class Search extends React.Component {
                                     <div>{next["artist"]}</div>
                                   </div>
                                   <div className={"addButton"}>
-                                    <span className={"control-fa"} onClick={() => this.onChange(next)}>
+                                    <span className={"control-fa"}>
                                       <FontAwesomeIcon icon={faPlus} />
                                     </span>
                                   </div>
@@ -346,15 +347,21 @@ class Search extends React.Component {
           </div>
         )}
         {tabName == "queue" && (
-         <div className="full-div">
-           <div className={"flex-scrollable"}>
+          <div className="full-div">
+            <div className={"flex-scrollable"}>
               {selectedOptions.map((value) => {
                 return <Fade appear={true} in={true}><div className={"flex-item"}><img className={"album"} src={value["image"]}></img><div><div>{value["value"]}</div><div>{value["artist"]}</div></div></div></Fade>
               })}
             </div>
           </div>
         )}
-        <Button variant="danger" className="flex-button" onClick={this.deleteRoom}>Delete Room</Button>
+        {tabName == "settings" && (
+          <div className="full-div">
+            <div className={"flex-scrollable"}>
+              <Button variant="danger" className="flex-button" onClick={this.deleteRoom}>Delete Room</Button>
+            </div>
+          </div>
+        )}
       </div>
     )
   }

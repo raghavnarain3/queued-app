@@ -30,7 +30,7 @@ code {
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 85%;
+  height: 90%;
   overflow-y: auto;
   align-items: center;
   min-width: 350px;
@@ -48,7 +48,7 @@ code {
 
 .full-div {
   width: 50%;
-  height: 45%;
+  height: 65%;
   min-width: 350px;
 }
 
@@ -186,7 +186,7 @@ code {
 }
 
 .query {
-  min-height: 40px;
+  min-height: 5%;
 }
 
 .accordion {
