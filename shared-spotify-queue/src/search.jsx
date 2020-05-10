@@ -10,7 +10,7 @@ import AsyncSelect from 'react-select/async'
 import socketIOClient from "socket.io-client";
 import Fade from 'react-bootstrap/Fade'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPlay, faPause, faForward, faPlus } from '@fortawesome/free-solid-svg-icons'
+import { faPlay, faPause, faForward, faPlus, faAngleDown } from '@fortawesome/free-solid-svg-icons'
 
 class Search extends React.Component {
   state = {
@@ -113,7 +113,6 @@ class Search extends React.Component {
           ))
           playlists[index]["results"] = results
           this.setState({ playlists: playlists })
-          console.log(results)
         }
       })
   }
@@ -267,10 +266,10 @@ class Search extends React.Component {
         {tabName === "search" && (
           <div className="full-div">
             <FormControl className="query" ref={this.textInput} type="text" placeholder="Search for a song..." defaultValue={query} onKeyPress={this.handleKeyPress} onChange={() => this.handleChange()} />
-            <div className={"flex-scrollable"}>
+            <div className={"flex-scrollable-search"}>
               {searchResults.map((value) => {
                 return <Fade appear={true} in={true}>
-                  <div className={"flex-item"}>
+                  <div className={"flex-item-clickable"} onClick={() => this.onChange(value)}>
                     <img className={"album"} src={value["image"]}></img>
                     <div className={"song-info"}>
                       <div className={"player-details"}>
@@ -297,22 +296,31 @@ class Search extends React.Component {
               {playlists.map((value, index) => {
                 return (
                   <Accordion>
-                    <Accordion.Toggle as={"div"} eventKey="0" onClick={() => this.getPlaylistTracks(value["uri"], index)}>
+                    <Accordion.Toggle as={"div"} eventKey={index} onClick={() => this.getPlaylistTracks(value["uri"], index)}>
                       <Fade appear={true} in={true}>
-                        <div className={"flex-item"}>
+                        <div className={"flex-item-clickable"}>
                           <img className={"album"} src={value["image"]}></img>
-                          <div>
-                            <div>{value["value"]}</div>
-                            <div>{value["artist"]}</div>
-                          </div>
+                            <div className={"song-info"}>
+                              <div className={"player-details"}>
+                                <div>
+                                  <div>{value["value"]}</div>
+                                  <div>{value["artist"]}</div>
+                                </div>
+                                <div className={"addButton"}>
+                                  <span className={"control-fa"} onClick={() => {}}>
+                                    <FontAwesomeIcon icon={faAngleDown} />
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
                         </div>
                       </Fade>
                     </Accordion.Toggle>
-                    <Accordion.Collapse eventKey="0">
+                    <Accordion.Collapse eventKey={index}>
                       <div>
                         {value["results"] && value["results"].map((next) => {
                           return <Fade appear={true} in={true}>
-                            <div className={"flex-item"}>
+                            <div className={"flex-item-clickable"} onClick={() => this.onChange(next)}>
                               <img className={"album"} src={next["image"]}></img>
                               <div className={"song-info"}>
                                 <div className={"player-details"}>
