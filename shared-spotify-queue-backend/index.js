@@ -136,7 +136,6 @@ setInterval(() => {
                 room_to_queue[room]["currently_playing"]["is_playing"] = is_playing
               }
               io.in(room).emit('queue', room_to_queue[room])
-              console.log("room_to_queue " + room + " " + room_to_queue[room])
               if (queue.length > 0 && (is_not_playing || (room_to_queue[room]["currently_playing"] && (currently_playing_song !== room_to_queue[room]["currently_playing"]["uri"])) || (room_to_queue[room]["currently_playing"] && room_to_queue[room]["currently_playing"]["next"]))) {
                 next_track = room_to_queue[room]["queue"].shift()
                 if(next_track) {
