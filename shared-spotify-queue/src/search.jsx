@@ -6,11 +6,12 @@ import Nav from 'react-bootstrap/Nav'
 import Accordion from 'react-bootstrap/Accordion'
 import FormControl from 'react-bootstrap/FormControl'
 import ProgressBar from 'react-bootstrap/ProgressBar'
+import Modal from 'react-bootstrap/Modal'
 import AsyncSelect from 'react-select/async'
 import socketIOClient from "socket.io-client";
 import Fade from 'react-bootstrap/Fade'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPlay, faPause, faForward, faPlus, faAngleDown, faTimes } from '@fortawesome/free-solid-svg-icons'
+import { faPlay, faPause, faForward, faPlus, faAngleDown, faTimes, faArrowUp, faArrowDown, faEllipsisV} from '@fortawesome/free-solid-svg-icons'
 import { v4 as uuidv4 } from 'uuid';
 
 class Search extends React.Component {
@@ -24,6 +25,8 @@ class Search extends React.Component {
     searchResults: [],
     playlists: [],
     show: false,
+    showModal: false,
+    modalSong: {},
     queuedSong: "",
   }
 
@@ -65,7 +68,7 @@ class Search extends React.Component {
       .then(json => {
         if (json["tracks"]) {
           let results = json["tracks"]["items"].map((item) => (
-            { id: uuidv4(), value: item["name"], artist: item["artists"][0]["name"], uri: item["uri"], image: item["album"]["images"][0]["url"], duration: item["duration_ms"], progress: 0, is_playing: true }
+            { id: uuidv4(), votes: 0, value: item["name"], artist: item["artists"][0]["name"], uri: item["uri"], image: item["album"]["images"][0]["url"], duration: item["duration_ms"], progress: 0, is_playing: true }
           ))
           this.setState({ searchResults: results })
         } else {
@@ -79,6 +82,7 @@ class Search extends React.Component {
     const { socket } = this.state;
     var message = {room: room, id: id}
     socket.emit('delete song', message);
+    this.handleCloseModal()
   }
 
   getPlaylists = () => {
@@ -91,7 +95,7 @@ class Search extends React.Component {
       .then(json => {
         if (json["items"]) {
           let results = json["items"].map((item) => (
-            { id: uuidv4(), value: item["name"], artist: item["owner"]["display_name"], uri: item["tracks"]["href"], image: item["images"][0]["url"] }
+            { id: uuidv4(), votes: 0, value: item["name"], artist: item["owner"]["display_name"], uri: item["tracks"]["href"], image: item["images"][0]["url"] }
           ))
           this.setState({ playlists: results })
         } else {
@@ -117,7 +121,7 @@ class Search extends React.Component {
               return false
             }
           }).map((item) => (
-            { id: uuidv4(), value: item["track"]["name"], artist: item["track"]["artists"][0]["name"], uri: item["track"]["uri"], image: item["track"]["album"]["images"][0]["url"], duration: item["track"]["duration_ms"], progress: 0, is_playing: true }
+            { id: uuidv4(), votes: 0, value: item["track"]["name"], artist: item["track"]["artists"][0]["name"], uri: item["track"]["uri"], image: item["track"]["album"]["images"][0]["url"], duration: item["track"]["duration_ms"], progress: 0, is_playing: true }
           ))
           playlists[index]["results"] = results
           this.setState({ playlists: playlists })
@@ -193,11 +197,58 @@ class Search extends React.Component {
     this.setState({ show: false })
   }
 
+  showModalOptions = (value) => {
+    this.setState({ modalSong: value, showModal: true})
+  }
+
+  handleCloseModal = () => {
+    this.setState({ showModal: false})
+  }
+
+  vote = (id, count) => {
+    const { room } = this.props.match.params
+    const { socket } = this.state;
+    var message = {room: room, id: id, count: count}
+    socket.emit('vote', message);
+    this.handleCloseModal()
+  }
+
   render() {
     const { room } = this.props.match.params
-    const { selectedOptions, currentSong, tabName, query, searchResults, show, queuedSong, playlists } = this.state
+    const { selectedOptions, currentSong, tabName, query, searchResults, show, queuedSong, playlists, showModal, modalSong } = this.state
   	return (
       <div className={"flex-container"}>
+        <Modal show={showModal} onHide={this.handleCloseModal}>
+          <Modal.Header closeButton>
+            <Modal.Title as="b">
+              Update Queue
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <div className={"flex-item"}>
+              <img className={"album"} src={modalSong["image"]}></img>
+              <div className={"song-info"}>
+                <div className={"player-details"}>
+                  <div>
+                    <div>{modalSong["value"]}</div>
+                    <div>{modalSong["artist"]}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className={"flex-row-container"}>
+              <div className={"flex-row-container"}>
+                <div className={"upvote"}>
+                  <Button variant="outline-success" onClick={() => this.vote(modalSong.id, 1)}>Upvote <FontAwesomeIcon icon={faArrowUp} /></Button>
+                </div>
+                <div>
+                  <Button variant="outline-danger" onClick={() => this.vote(modalSong.id, -1)}>Downvote <FontAwesomeIcon icon={faArrowDown} /></Button>
+                </div>
+              </div>
+              <Button variant="danger" onClick={() => this.remove(modalSong.id)}>Remove</Button>
+            </div>
+          </Modal.Body>
+        </Modal>
         <Toast onClose={this.stopShow} show={show} delay={750} autohide>
           <Toast.Header>
             <div>Added <strong>{queuedSong}</strong> to the queue!</div>
@@ -359,7 +410,7 @@ class Search extends React.Component {
             <div className={"flex-scrollable"}>
               {selectedOptions.map((value) => {
                 return <Fade appear={true} in={true}>
-                  <div className={"flex-item"}>
+                  <div className={"flex-item-clickable"} onClick={() => this.showModalOptions(value)}>
                     <img className={"album"} src={value["image"]}></img>
                     <div className={"song-info"}>
                       <div className={"player-details"}>
@@ -367,9 +418,12 @@ class Search extends React.Component {
                           <div>{value["value"]}</div>
                           <div>{value["artist"]}</div>
                         </div>
-                        <div className={"addButton"}  onClick={() => this.remove(value["id"])}>
+                        <div className={"controls"}>
+                          <span className={"play"}>
+                            {value.votes}
+                          </span>
                           <span className={"control-fa"}>
-                            <FontAwesomeIcon icon={faTimes} />
+                            <FontAwesomeIcon icon={faEllipsisV} />
                           </span>
                         </div>
                       </div>

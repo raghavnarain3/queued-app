@@ -33,8 +33,26 @@ io.on('connection', function (socket) {
       room_to_queue[room]["queue"] = curr_queue.filter(function( obj ) {
         return obj.id !== id;
       });
-      
+
       io.in(room).emit('queue', room_to_queue[room]);
+    }
+  });
+
+  socket.on('vote', function (message) {
+    room = message['room'];
+    id = message['id'];
+    count = message['count']
+    if (room in room_to_queue) {
+      obj = room_to_queue[room]["queue"].find(item => item.id === id);
+      if(obj) {
+        obj.votes += count
+        room_to_queue[room]["queue"].sort(function (a,b) {
+          if (a.votes > b.votes) return -1;
+          if (a.votes < b.votes) return 1;
+          return 0;
+        });
+        io.in(room).emit('queue', room_to_queue[room]);
+      }
     }
   });
 
