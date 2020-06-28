@@ -10,7 +10,8 @@ import AsyncSelect from 'react-select/async'
 import socketIOClient from "socket.io-client";
 import Fade from 'react-bootstrap/Fade'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPlay, faPause, faForward, faPlus, faAngleDown } from '@fortawesome/free-solid-svg-icons'
+import { faPlay, faPause, faForward, faPlus, faAngleDown, faTimes } from '@fortawesome/free-solid-svg-icons'
+import { v4 as uuidv4 } from 'uuid';
 
 class Search extends React.Component {
   state = {
@@ -64,13 +65,20 @@ class Search extends React.Component {
       .then(json => {
         if (json["tracks"]) {
           let results = json["tracks"]["items"].map((item) => (
-            { value: item["name"], artist: item["artists"][0]["name"], uri: item["uri"], image: item["album"]["images"][0]["url"], duration: item["duration_ms"], progress: 0, is_playing: true }
+            { id: uuidv4(), value: item["name"], artist: item["artists"][0]["name"], uri: item["uri"], image: item["album"]["images"][0]["url"], duration: item["duration_ms"], progress: 0, is_playing: true }
           ))
           this.setState({ searchResults: results })
         } else {
           this.setState({ searchResults: [] })
         }
       })
+  }
+
+  remove = (id) => {
+    const { room } = this.props.match.params
+    const { socket } = this.state;
+    var message = {room: room, id: id}
+    socket.emit('delete song', message);
   }
 
   getPlaylists = () => {
@@ -83,7 +91,7 @@ class Search extends React.Component {
       .then(json => {
         if (json["items"]) {
           let results = json["items"].map((item) => (
-            { value: item["name"], artist: item["owner"]["display_name"], uri: item["tracks"]["href"], image: item["images"][0]["url"] }
+            { id: uuidv4(), value: item["name"], artist: item["owner"]["display_name"], uri: item["tracks"]["href"], image: item["images"][0]["url"] }
           ))
           this.setState({ playlists: results })
         } else {
@@ -109,7 +117,7 @@ class Search extends React.Component {
               return false
             }
           }).map((item) => (
-            { value: item["track"]["name"], artist: item["track"]["artists"][0]["name"], uri: item["track"]["uri"], image: item["track"]["album"]["images"][0]["url"], duration: item["track"]["duration_ms"], progress: 0, is_playing: true }
+            { id: uuidv4(), value: item["track"]["name"], artist: item["track"]["artists"][0]["name"], uri: item["track"]["uri"], image: item["track"]["album"]["images"][0]["url"], duration: item["track"]["duration_ms"], progress: 0, is_playing: true }
           ))
           playlists[index]["results"] = results
           this.setState({ playlists: playlists })
@@ -350,7 +358,24 @@ class Search extends React.Component {
           <div className="full-div">
             <div className={"flex-scrollable"}>
               {selectedOptions.map((value) => {
-                return <Fade appear={true} in={true}><div className={"flex-item"}><img className={"album"} src={value["image"]}></img><div><div>{value["value"]}</div><div>{value["artist"]}</div></div></div></Fade>
+                return <Fade appear={true} in={true}>
+                  <div className={"flex-item"}>
+                    <img className={"album"} src={value["image"]}></img>
+                    <div className={"song-info"}>
+                      <div className={"player-details"}>
+                        <div>
+                          <div>{value["value"]}</div>
+                          <div>{value["artist"]}</div>
+                        </div>
+                        <div className={"addButton"}  onClick={() => this.remove(value["id"])}>
+                          <span className={"control-fa"}>
+                            <FontAwesomeIcon icon={faTimes} />
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Fade>
               })}
             </div>
           </div>

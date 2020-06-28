@@ -24,6 +24,20 @@ io.on('connection', function (socket) {
     }
   });
 
+  socket.on('delete song', function (message) {
+    room = message['room'];
+    id = message['id'];
+
+    if (room in room_to_queue) {
+      curr_queue = room_to_queue[room]["queue"]
+      room_to_queue[room]["queue"] = curr_queue.filter(function( obj ) {
+        return obj.id !== id;
+      });
+      
+      io.in(room).emit('queue', room_to_queue[room]);
+    }
+  });
+
   socket.on('join room', function (message) {
     room = message['room'];
     user = message['user'];
