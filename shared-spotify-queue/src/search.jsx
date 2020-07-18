@@ -11,6 +11,8 @@ import AsyncSelect from 'react-select/async'
 import socketIOClient from "socket.io-client";
 import Fade from 'react-bootstrap/Fade'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { faPlay, faPause, faForward, faPlus, faAngleDown, faTimes, faArrowUp, faArrowDown, faEllipsisV} from '@fortawesome/free-solid-svg-icons'
 import { v4 as uuidv4 } from 'uuid';
 
@@ -141,6 +143,7 @@ class Search extends React.Component {
     var message = {room: room, selectedOption: selectedOption}
     socket.emit('add', message);
     this.setState({ queuedSong: selectedOption["value"], show: true })
+    toast.info(`Added ${selectedOption["value"]} to the queue`);
   }
 
   deleteRoom = () => {
@@ -217,6 +220,18 @@ class Search extends React.Component {
     const { room } = this.props.match.params
     const { selectedOptions, currentSong, tabName, query, searchResults, show, queuedSong, playlists, showModal, modalSong } = this.state
   	return (
+      <>
+      <ToastContainer
+        position="top-right"
+        autoClose={2000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
       <div className={"flex-container"}>
         <Modal show={showModal} onHide={this.handleCloseModal}>
           <Modal.Header closeButton>
@@ -249,11 +264,6 @@ class Search extends React.Component {
             </div>
           </Modal.Body>
         </Modal>
-        <Toast onClose={this.stopShow} show={show} delay={750} autohide>
-          <Toast.Header>
-            <div>Added <strong>{queuedSong}</strong> to the queue!</div>
-          </Toast.Header>
-        </Toast>
         <div>Room: <b>{room}</b></div>
         {!this.showNowPlaying() && (
           <div className={"now-playing"}>
@@ -442,6 +452,7 @@ class Search extends React.Component {
           </div>
         )}
       </div>
+      </>
     )
   }
 }
