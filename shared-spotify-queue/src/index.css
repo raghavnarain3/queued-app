@@ -7,11 +7,18 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color: white;
-  background-color: #1b1c23
+  background-color: #1b1c23;
 }
 
 html {
   height: 100%;
+}
+
+/* If the screen size is 600px wide or less, set the font-size of <div> to 30px */
+@media screen and (max-width: 600px) {
+  body {
+    font-size: 12px;
+  }
 }
 
 code {
