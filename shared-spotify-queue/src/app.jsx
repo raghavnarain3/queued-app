@@ -19,9 +19,7 @@ class App extends React.Component {
   }
 
   onClick() {
-    console.log(process.env.REACT_APP_BACKEND_URL)
     const url = process.env.REACT_APP_BACKEND_URL + "/login?room=" + this.textInput.current.value
-    console.log(url)
     window.location.assign(url)
   }
 

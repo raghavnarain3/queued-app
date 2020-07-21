@@ -64,6 +64,28 @@ class Search extends React.Component {
     this.setState({ socket: socket });
   }
 
+  refreshToken = () => {
+    const client_id = process.env.REACT_APP_CLIENT_ID
+    const client_secret = process.env.REACT_APP_CLIENT_SECRET
+    console.log(client_id)
+
+    let results = fetch('https://accounts.spotify.com/api/token', {
+      method: 'post',
+      headers: {
+        'Authorization': 'Basic ' + btoa(`${client_id}:${client_secret}`),
+        'Content-Type':'application/x-www-form-urlencoded',
+      },
+      body: `grant_type=refresh_token&refresh_token=${localStorage.getItem('refresh_key')}`,
+    })
+      .then(response => response.json())
+      .then(json => {
+        console.log(json);
+        localStorage.setItem("access_key", json.access_token);
+        this.setState({ access_key: json.access_token })
+      })
+
+  }
+
   search = () => {
     const { query, access_key } = this.state
 
@@ -77,6 +99,9 @@ class Search extends React.Component {
             { value: item["name"], artist: item["artists"][0]["name"], uri: item["uri"], image: item["album"]["images"][0]["url"], duration: item["duration_ms"], progress: 0, is_playing: true }
           ))
           this.setState({ searchResults: results })
+        } else if (json.error.code === 401) {
+          this.refreshToken();
+          this.search();
         } else {
           this.setState({ searchResults: [] })
         }
@@ -105,6 +130,9 @@ class Search extends React.Component {
             { value: item["name"], artist: item["owner"]["display_name"], uri: item["tracks"]["href"], image: item["images"][0]["url"] }
           ))
           this.setState({ playlists: results })
+        } else if (json.error.code === 401) {
+          this.refreshToken();
+          this.getPlaylists();
         } else {
           this.setState({ playlists: [] })
         }
@@ -131,6 +159,9 @@ class Search extends React.Component {
           ))
           playlists[index]["results"] = results
           this.setState({ playlists: playlists })
+        } else if (json.error.code === 401) {
+          this.refreshToken();
+          this.getPlaylistTracks(uri, index);
         }
       })
   }

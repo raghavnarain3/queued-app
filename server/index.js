@@ -15,7 +15,7 @@ app.get('/login', function(req, res) {
   var room = req.param("room")
 	var client_id = process.env.CLIENT_ID
 	var redirect_uri = process.env.REDIRECT_URL
-  var scopes = 'user-read-private user-read-email playlist-read-private'
+  var scopes = 'user-read-private user-read-email playlist-read-private playlist-read-collaborative'
   res.redirect('https://accounts.spotify.com/authorize' + 
     '?response_type=code' +
   	'&client_id=' + client_id +
