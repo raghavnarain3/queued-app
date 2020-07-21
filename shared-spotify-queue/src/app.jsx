@@ -30,9 +30,9 @@ class App extends React.Component {
 
     return (
       <div className={"flex-container"}>
-        <h1>Welcome to Queu'd</h1>
+        <h1>Queued</h1>
         <Button className= "flex-button" href={process.env.REACT_APP_BACKEND_URL + "/create-room"}>Start a Room!</Button>
-        <h3> OR </h3>
+        <h3> or </h3>
         <div>
           <FormControl className="room" ref={this.textInput} type="text" placeholder="Room..." default={room} onChange={() => this.handleChange()} />
         </div>

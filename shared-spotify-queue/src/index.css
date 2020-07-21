@@ -19,6 +19,14 @@ html {
   body {
     font-size: 12px;
   }
+
+  .btn {
+    font-size: 12px;
+  }
+
+  .form-control {
+    font-size: 12px;
+  }
 }
 
 code {

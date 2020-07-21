@@ -30,11 +30,16 @@ class Search extends React.Component {
     showModal: false,
     modalSong: {},
     queuedSong: "",
+    access_key: localStorage.getItem("access_key"),
   }
 
-  constructor() {
-    super()
+  constructor(props) {
+    super(props)
     this.textInput = React.createRef();
+    if(localStorage.getItem("access_key") === null || localStorage.getItem("refresh_key") == null) {
+      const url = process.env.REACT_APP_BACKEND_URL + "/login?room=" + this.props.match.params.room;
+      window.location.assign(url);
+    }
   }
 
 
@@ -60,8 +65,7 @@ class Search extends React.Component {
   }
 
   search = () => {
-    const { access_key } = this.props.match.params
-    const { query } = this.state
+    const { query, access_key } = this.state
 
     let results = fetch('https://api.spotify.com/v1/search' + '?q=' + query + '&type=track', {
       headers: { 'Authorization': 'Bearer ' + access_key },
@@ -70,7 +74,7 @@ class Search extends React.Component {
       .then(json => {
         if (json["tracks"]) {
           let results = json["tracks"]["items"].map((item) => (
-            { id: uuidv4(), votes: 0, value: item["name"], artist: item["artists"][0]["name"], uri: item["uri"], image: item["album"]["images"][0]["url"], duration: item["duration_ms"], progress: 0, is_playing: true }
+            { value: item["name"], artist: item["artists"][0]["name"], uri: item["uri"], image: item["album"]["images"][0]["url"], duration: item["duration_ms"], progress: 0, is_playing: true }
           ))
           this.setState({ searchResults: results })
         } else {
@@ -88,16 +92,17 @@ class Search extends React.Component {
   }
 
   getPlaylists = () => {
-    const { access_key } = this.props.match.params
+    const { access_key } = this.state
 
     let results = fetch('https://api.spotify.com/v1/me/playlists', {
       headers: { 'Authorization': 'Bearer ' + access_key },
     })
       .then(response => response.json())
       .then(json => {
+        console.log(json)
         if (json["items"]) {
           let results = json["items"].map((item) => (
-            { id: uuidv4(), votes: 0, value: item["name"], artist: item["owner"]["display_name"], uri: item["tracks"]["href"], image: item["images"][0]["url"] }
+            { value: item["name"], artist: item["owner"]["display_name"], uri: item["tracks"]["href"], image: item["images"][0]["url"] }
           ))
           this.setState({ playlists: results })
         } else {
@@ -107,8 +112,7 @@ class Search extends React.Component {
   }
 
   getPlaylistTracks = (uri, index) => {
-    const { access_key } = this.props.match.params
-    const { query, playlists } = this.state
+    const { query, playlists, access_key } = this.state
 
     let results = fetch(uri, {
       headers: { 'Authorization': 'Bearer ' + access_key },
@@ -123,7 +127,7 @@ class Search extends React.Component {
               return false
             }
           }).map((item) => (
-            { id: uuidv4(), votes: 0, value: item["track"]["name"], artist: item["track"]["artists"][0]["name"], uri: item["track"]["uri"], image: item["track"]["album"]["images"][0]["url"], duration: item["track"]["duration_ms"], progress: 0, is_playing: true }
+            { value: item["track"]["name"], artist: item["track"]["artists"][0]["name"], uri: item["track"]["uri"], image: item["track"]["album"]["images"][0]["url"], duration: item["track"]["duration_ms"], progress: 0, is_playing: true }
           ))
           playlists[index]["results"] = results
           this.setState({ playlists: playlists })

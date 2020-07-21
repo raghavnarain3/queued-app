@@ -3,6 +3,7 @@ var io = require('socket.io')(3002, {
   pingTimeout: 60000,
 });
 const request = require('request');
+const { v4: uuidv4 } = require('uuid');
 
 room_to_creds = {}
 room_to_queue = {}
@@ -73,6 +74,8 @@ io.on('connection', function (socket) {
   socket.on('add', function (message) {
     room = message["room"];
     selectedOption = message["selectedOption"];
+    selectedOption.id = uuidv4();
+    selectedOption.votes = 0;
     if (room in room_to_queue) {
       room_to_queue[room]["queue"].push(selectedOption);
       io.in(room).emit('queue', room_to_queue[room]);
