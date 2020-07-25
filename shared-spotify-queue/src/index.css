@@ -283,3 +283,15 @@ code {
 button.close {
   color: white!important;
 }
+
+.list-group-item {
+  background-color: #25262d!important;
+}
+
+.list-group-item-action {
+  color: white!important;
+}
+
+.list-group {
+  width: 50%;
+}

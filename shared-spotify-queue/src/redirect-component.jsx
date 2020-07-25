@@ -15,8 +15,8 @@ class RedirectComponent extends React.Component {
 
 	render() {
 		const { room, access_key, refresh_key } = this.props.match.params
-  return (<Redirect to={"/room/" + room} />);
-}
+  	return (<Redirect to={"/room/" + room} />);
+	}
 }
 
 export default RedirectComponent

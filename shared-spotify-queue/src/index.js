@@ -6,6 +6,7 @@ import './index.css';
 import App from './app';
 import Search from './search'
 import CreatedRoom from './created-room'
+import Rooms from './rooms'
 import RedirectComponent from './redirect-component'
 import * as serviceWorker from './serviceWorker';
 
@@ -16,6 +17,7 @@ const routing = (
       <Route path="/search/:room/:access_key/:refresh_key" component={RedirectComponent} />
       <Route path="/created-room/:room" component={CreatedRoom} />
       <Route path="/room/:room" component={Search} />
+      <Route path="/all-rooms" component={Rooms} />
     </div>
   </Router>
 );

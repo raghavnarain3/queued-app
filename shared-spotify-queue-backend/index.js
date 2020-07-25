@@ -26,6 +26,10 @@ io.on('connection', function (socket) {
     }
   });
 
+  socket.on('get rooms', function (message) {
+    socket.emit('all rooms', Object.keys(room_to_queue))
+  });
+
   socket.on('delete song', function (message) {
     room = message['room'];
     id = message['id'];
