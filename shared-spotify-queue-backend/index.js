@@ -166,7 +166,7 @@ setInterval(() => {
             if (!error && (response.statusCode == 200 || response.statusCode == 204)) {
               if(body === undefined) {
                 currently_playing_song = null;
-                progress = 0;
+                progress = -1;
                 is_playing = false;
               } else {
                 currently_playing_song = body["item"]["uri"];
