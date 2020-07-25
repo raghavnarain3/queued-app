@@ -23,7 +23,9 @@ class Search extends React.Component {
     searchResults: [],
     playlists: [],
     showModal: false,
+    showPlaylistModal: false,
     modalSong: {},
+    modalPlaylist: {},
     access_key: localStorage.getItem("access_key"),
   }
 
@@ -131,10 +133,10 @@ class Search extends React.Component {
       })
   }
 
-  getPlaylistTracks = (uri, index) => {
+  getPlaylistTracks = (value) => {
     const { playlists, access_key } = this.state
-
-    fetch(uri, {
+    this.setState({showPlaylistModal: true, modalPlaylist: value})
+    fetch(value.uri, {
       headers: { 'Authorization': 'Bearer ' + access_key },
     })
       .then(response => response.json())
@@ -149,11 +151,11 @@ class Search extends React.Component {
           }).map((item) => (
             { value: item["track"]["name"], artist: item["track"]["artists"][0]["name"], uri: item["track"]["uri"], image: item["track"]["album"]["images"][0]["url"], duration: item["track"]["duration_ms"], progress: 0, is_playing: true }
           ))
-          playlists[index]["results"] = results
+          value["results"] = results
           this.setState({ playlists: playlists })
         } else if (json.error.status === 401) {
           this.refreshToken();
-          this.getPlaylistTracks(uri, index);
+          this.getPlaylistTracks(value);
         }
       })
   }
@@ -226,8 +228,16 @@ class Search extends React.Component {
     this.setState({ modalSong: value, showModal: true})
   }
 
+  showModalPlaylistOptions = (value) => {
+    this.setState({ modalPlaylist: value, showPlaylistModal: true})
+  }
+
   handleCloseModal = () => {
     this.setState({ showModal: false})
+  }
+
+  handleClosePlaylistModal = () => {
+    this.setState({ showPlaylistModal: false})
   }
 
   vote = (id, count) => {
@@ -240,7 +250,7 @@ class Search extends React.Component {
 
   render() {
     const { room } = this.props.match.params
-    const { selectedOptions, currentSong, tabName, query, searchResults, playlists, showModal, modalSong } = this.state
+    const { selectedOptions, currentSong, tabName, query, searchResults, playlists, showModal, modalSong, showPlaylistModal, modalPlaylist } = this.state
   	return (
       <>
       <ToastContainer
@@ -283,6 +293,48 @@ class Search extends React.Component {
                 </div>
               </div>
               <Button variant="danger" onClick={() => this.remove(modalSong.id)}>Remove</Button>
+            </div>
+          </Modal.Body>
+        </Modal>
+        <Modal show={showPlaylistModal} onHide={this.handleClosePlaylistModal}>
+          <Modal.Header closeButton>
+            <Modal.Title as="b">
+              Add Songs from Playlist
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body scrollable={true}>
+            <div className={"flex-item"}>
+              <img className={"album"} src={modalPlaylist["image"]}></img>
+              <div className={"song-info"}>
+                <div className={"player-details"}>
+                  <div>
+                    <div>{modalPlaylist["value"]}</div>
+                    <div>{modalPlaylist["artist"]}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className={"top-border-box"}>
+            <div className={"flex-scrollable-modal"}>
+              {modalPlaylist["results"] && modalPlaylist["results"].map((next) => {
+                return <div className={"flex-item-clickable"} onClick={() => this.onChange(next)}>
+                  <img className={"album"} src={next["image"]}></img>
+                  <div className={"song-info"}>
+                    <div className={"player-details"}>
+                      <div>
+                        <div>{next["value"]}</div>
+                        <div>{next["artist"]}</div>
+                      </div>
+                      <div className={"addButton"}>
+                        <span className={"control-fa"}>
+                          <FontAwesomeIcon icon={faPlus} />
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              })}
+              </div>
             </div>
           </Modal.Body>
         </Modal>
@@ -383,50 +435,24 @@ class Search extends React.Component {
         {tabName == "playlists" && (
           <div className="full-div">
            <div className={"flex-scrollable"}>
-              {playlists.map((value, index) => {
+              {playlists.map((value) => {
                 return (
-                  <Accordion key={value.id}>
-                    <Accordion.Toggle as={"div"} eventKey={index} onClick={() => this.getPlaylistTracks(value["uri"], index)}>
-                      <div key={value.uri} className={"flex-item-clickable"}>
-                        <img className={"album"} src={value["image"]}></img>
-                          <div className={"song-info"}>
-                            <div className={"player-details"}>
-                              <div>
-                                <div>{value["value"]}</div>
-                                <div>{value["artist"]}</div>
-                              </div>
-                              <div className={"addButton"}>
-                                <span className={"control-fa"}>
-                                  <FontAwesomeIcon icon={faAngleDown} />
-                                </span>
-                              </div>
-                            </div>
+                  <div key={value.uri} className={"flex-item-clickable"} onClick={() => this.getPlaylistTracks(value)}>
+                    <img className={"album"} src={value["image"]}></img>
+                      <div className={"song-info"}>
+                        <div className={"player-details"}>
+                          <div>
+                            <div>{value["value"]}</div>
+                            <div>{value["artist"]}</div>
                           </div>
-                      </div>
-                    </Accordion.Toggle>
-                    <Accordion.Collapse eventKey={index}>
-                      <div>
-                        {value["results"] && value["results"].map((next) => {
-                          return <div className={"flex-item-clickable"} onClick={() => this.onChange(next)}>
-                            <img className={"album"} src={next["image"]}></img>
-                            <div className={"song-info"}>
-                              <div className={"player-details"}>
-                                <div>
-                                  <div>{next["value"]}</div>
-                                  <div>{next["artist"]}</div>
-                                </div>
-                                <div className={"addButton"}>
-                                  <span className={"control-fa"}>
-                                    <FontAwesomeIcon icon={faPlus} />
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
+                          <div className={"addButton"}>
+                            <span className={"control-fa"}>
+                              <FontAwesomeIcon icon={faEllipsisV} />
+                            </span>
                           </div>
-                        })}
+                        </div>
                       </div>
-                    </Accordion.Collapse>
-                  </Accordion>
+                  </div>
               )})}
            </div>
           </div>
