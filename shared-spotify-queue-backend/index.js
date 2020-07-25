@@ -227,7 +227,7 @@ setInterval(() => {
               request.post(authOptions, function(error, response, body) {
                 if (!error && response.statusCode === 200) {
                   console.log(body.access_token)
-                  room_to_creds.access_token = body.access_token
+                  room_to_creds[room].access_token = body.access_token
                 }
               })
             }

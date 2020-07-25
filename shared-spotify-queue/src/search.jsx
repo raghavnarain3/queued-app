@@ -99,7 +99,7 @@ class Search extends React.Component {
             { value: item["name"], artist: item["artists"][0]["name"], uri: item["uri"], image: item["album"]["images"][0]["url"], duration: item["duration_ms"], progress: 0, is_playing: true }
           ))
           this.setState({ searchResults: results })
-        } else if (json.error.code === 401) {
+        } else if (json.error.status === 401) {
           this.refreshToken();
           this.search();
         } else {
@@ -130,7 +130,7 @@ class Search extends React.Component {
             { value: item["name"], artist: item["owner"]["display_name"], uri: item["tracks"]["href"], image: item["images"][0]["url"] }
           ))
           this.setState({ playlists: results })
-        } else if (json.error.code === 401) {
+        } else if (json.error.status === 401) {
           this.refreshToken();
           this.getPlaylists();
         } else {
@@ -159,7 +159,7 @@ class Search extends React.Component {
           ))
           playlists[index]["results"] = results
           this.setState({ playlists: playlists })
-        } else if (json.error.code === 401) {
+        } else if (json.error.status === 401) {
           this.refreshToken();
           this.getPlaylistTracks(uri, index);
         }
