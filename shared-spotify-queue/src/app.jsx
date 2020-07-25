@@ -1,7 +1,6 @@
 import React from 'react'
 import Button from 'react-bootstrap/Button';
 import FormControl from 'react-bootstrap/FormControl'
-import { Link } from 'react-router-dom'
 
 class App extends React.Component {
   state = {
@@ -12,7 +11,6 @@ class App extends React.Component {
     super()
     this.textInput = React.createRef();
   }
-
 
   handleChange() {
     this.setState({ room: this.textInput.current.value })

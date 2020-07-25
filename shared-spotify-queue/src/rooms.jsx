@@ -10,10 +10,6 @@ class Rooms extends React.Component {
     rooms: [],
   }
 
-  constructor() {
-    super()
-  }
-
   componentWillMount() {
     const { endpoint } = this.state;
     const socket = socketIOClient(endpoint);

@@ -15,10 +15,12 @@
     "react": "^16.13.1",
     "react-bootstrap": "^1.0.1",
     "react-dom": "^16.13.1",
+    "react-flip-move": "^3.0.4",
     "react-router-dom": "^5.1.2",
     "react-scripts": "^3.4.1",
     "react-select": "^3.1.0",
     "react-toastify": "^6.0.8",
+    "react-transition-group": "^4.4.1",
     "socket.io-client": "^2.3.0",
     "uuid": "^8.2.0"
   },

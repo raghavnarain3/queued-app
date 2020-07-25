@@ -27,6 +27,10 @@ html {
   .form-control {
     font-size: 12px;
   }
+
+  .badge {
+    font-size: 12px!important;
+  }
 }
 
 code {
@@ -294,4 +298,10 @@ button.close {
 
 .list-group {
   width: 50%;
+}
+
+.badge {
+  font-size: 1rem;
+  background-color: #eb906e!important;
+  margin-top: 1px;
 }

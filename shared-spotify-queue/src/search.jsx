@@ -1,20 +1,16 @@
 import React from 'react'
-import Select from 'react-select'
 import Button from 'react-bootstrap/Button';
-import Toast from 'react-bootstrap/Toast'
 import Nav from 'react-bootstrap/Nav'
 import Accordion from 'react-bootstrap/Accordion'
+import Badge from 'react-bootstrap/Badge'
 import FormControl from 'react-bootstrap/FormControl'
 import ProgressBar from 'react-bootstrap/ProgressBar'
 import Modal from 'react-bootstrap/Modal'
-import AsyncSelect from 'react-select/async'
 import socketIOClient from "socket.io-client";
-import Fade from 'react-bootstrap/Fade'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { faPlay, faPause, faForward, faPlus, faAngleDown, faTimes, faArrowUp, faArrowDown, faEllipsisV} from '@fortawesome/free-solid-svg-icons'
-import { v4 as uuidv4 } from 'uuid';
+import { faPlay, faPause, faForward, faPlus, faAngleDown, faArrowUp, faArrowDown, faEllipsisV} from '@fortawesome/free-solid-svg-icons'
 
 class Search extends React.Component {
   state = {
@@ -26,10 +22,8 @@ class Search extends React.Component {
     query: "",
     searchResults: [],
     playlists: [],
-    show: false,
     showModal: false,
     modalSong: {},
-    queuedSong: "",
     access_key: localStorage.getItem("access_key"),
   }
 
@@ -49,7 +43,7 @@ class Search extends React.Component {
     })
   }
 
-  componentWillMount() {
+  componentDidMount() {
     const { endpoint } = this.state;
     const socket = socketIOClient(endpoint);
     const { room } = this.props.match.params
@@ -67,9 +61,8 @@ class Search extends React.Component {
   refreshToken = () => {
     const client_id = process.env.REACT_APP_CLIENT_ID
     const client_secret = process.env.REACT_APP_CLIENT_SECRET
-    console.log(client_id)
 
-    let results = fetch('https://accounts.spotify.com/api/token', {
+    fetch('https://accounts.spotify.com/api/token', {
       method: 'post',
       headers: {
         'Authorization': 'Basic ' + btoa(`${client_id}:${client_secret}`),
@@ -79,7 +72,6 @@ class Search extends React.Component {
     })
       .then(response => response.json())
       .then(json => {
-        console.log(json);
         localStorage.setItem("access_key", json.access_token);
         this.setState({ access_key: json.access_token })
       })
@@ -89,7 +81,7 @@ class Search extends React.Component {
   search = () => {
     const { query, access_key } = this.state
 
-    let results = fetch('https://api.spotify.com/v1/search' + '?q=' + query + '&type=track', {
+    fetch('https://api.spotify.com/v1/search?q=' + query + '&type=track', {
       headers: { 'Authorization': 'Bearer ' + access_key },
     })
       .then(response => response.json())
@@ -119,7 +111,7 @@ class Search extends React.Component {
   getPlaylists = () => {
     const { access_key } = this.state
 
-    let results = fetch('https://api.spotify.com/v1/me/playlists', {
+    fetch('https://api.spotify.com/v1/me/playlists', {
       headers: { 'Authorization': 'Bearer ' + access_key },
     })
       .then(response => response.json())
@@ -140,9 +132,9 @@ class Search extends React.Component {
   }
 
   getPlaylistTracks = (uri, index) => {
-    const { query, playlists, access_key } = this.state
+    const { playlists, access_key } = this.state
 
-    let results = fetch(uri, {
+    fetch(uri, {
       headers: { 'Authorization': 'Bearer ' + access_key },
     })
       .then(response => response.json())
@@ -177,7 +169,6 @@ class Search extends React.Component {
     const { socket } = this.state;
     var message = {room: room, selectedOption: selectedOption}
     socket.emit('add', message);
-    this.setState({ queuedSong: selectedOption["value"], show: true })
     toast.info(`Added ${selectedOption["value"]} to the queue`);
   }
 
@@ -223,16 +214,12 @@ class Search extends React.Component {
   }
 
   switchViews = (selectedKey) => {
-    if (selectedKey == "playlists") {
+    if (selectedKey === "playlists") {
       this.getPlaylists()
       this.setState({ tabName: "playlists" });
     } else {
       this.setState({ tabName: selectedKey });
     }
-  }
-
-  stopShow = () => {
-    this.setState({ show: false })
   }
 
   showModalOptions = (value) => {
@@ -253,7 +240,7 @@ class Search extends React.Component {
 
   render() {
     const { room } = this.props.match.params
-    const { selectedOptions, currentSong, tabName, query, searchResults, show, queuedSong, playlists, showModal, modalSong } = this.state
+    const { selectedOptions, currentSong, tabName, query, searchResults, playlists, showModal, modalSong } = this.state
   	return (
       <>
       <ToastContainer
@@ -373,24 +360,22 @@ class Search extends React.Component {
             <FormControl className="query" ref={this.textInput} type="text" placeholder="Search for a song..." defaultValue={query} onKeyPress={this.handleKeyPress} onChange={() => this.handleChange()} />
             <div className={"flex-scrollable-search"}>
               {searchResults.map((value) => {
-                return <Fade appear={true} in={true}>
-                  <div className={"flex-item-clickable"} onClick={() => this.onChange(value)}>
-                    <img className={"album"} src={value["image"]}></img>
-                    <div className={"song-info"}>
-                      <div className={"player-details"}>
-                        <div>
-                          <div>{value["value"]}</div>
-                          <div>{value["artist"]}</div>
-                        </div>
-                        <div className={"addButton"}>
-                          <span className={"control-fa"}>
-                            <FontAwesomeIcon icon={faPlus} />
-                          </span>
-                        </div>
+                return <div key={value.uri} className={"flex-item-clickable"} onClick={() => this.onChange(value)}>
+                  <img className={"album"} src={value["image"]}></img>
+                  <div className={"song-info"}>
+                    <div className={"player-details"}>
+                      <div>
+                        <div>{value["value"]}</div>
+                        <div>{value["artist"]}</div>
+                      </div>
+                      <div className={"addButton"}>
+                        <span className={"control-fa"}>
+                          <FontAwesomeIcon icon={faPlus} />
+                        </span>
                       </div>
                     </div>
                   </div>
-                </Fade>
+                </div>
               })}
             </div>
           </div>
@@ -400,48 +385,44 @@ class Search extends React.Component {
            <div className={"flex-scrollable"}>
               {playlists.map((value, index) => {
                 return (
-                  <Accordion>
+                  <Accordion key={value.id}>
                     <Accordion.Toggle as={"div"} eventKey={index} onClick={() => this.getPlaylistTracks(value["uri"], index)}>
-                      <Fade appear={true} in={true}>
-                        <div className={"flex-item-clickable"}>
-                          <img className={"album"} src={value["image"]}></img>
-                            <div className={"song-info"}>
-                              <div className={"player-details"}>
-                                <div>
-                                  <div>{value["value"]}</div>
-                                  <div>{value["artist"]}</div>
-                                </div>
-                                <div className={"addButton"}>
-                                  <span className={"control-fa"}>
-                                    <FontAwesomeIcon icon={faAngleDown} />
-                                  </span>
-                                </div>
+                      <div key={value.uri} className={"flex-item-clickable"}>
+                        <img className={"album"} src={value["image"]}></img>
+                          <div className={"song-info"}>
+                            <div className={"player-details"}>
+                              <div>
+                                <div>{value["value"]}</div>
+                                <div>{value["artist"]}</div>
+                              </div>
+                              <div className={"addButton"}>
+                                <span className={"control-fa"}>
+                                  <FontAwesomeIcon icon={faAngleDown} />
+                                </span>
                               </div>
                             </div>
-                        </div>
-                      </Fade>
+                          </div>
+                      </div>
                     </Accordion.Toggle>
                     <Accordion.Collapse eventKey={index}>
                       <div>
                         {value["results"] && value["results"].map((next) => {
-                          return <Fade appear={true} in={true}>
-                            <div className={"flex-item-clickable"} onClick={() => this.onChange(next)}>
-                              <img className={"album"} src={next["image"]}></img>
-                              <div className={"song-info"}>
-                                <div className={"player-details"}>
-                                  <div>
-                                    <div>{next["value"]}</div>
-                                    <div>{next["artist"]}</div>
-                                  </div>
-                                  <div className={"addButton"}>
-                                    <span className={"control-fa"}>
-                                      <FontAwesomeIcon icon={faPlus} />
-                                    </span>
-                                  </div>
+                          return <div className={"flex-item-clickable"} onClick={() => this.onChange(next)}>
+                            <img className={"album"} src={next["image"]}></img>
+                            <div className={"song-info"}>
+                              <div className={"player-details"}>
+                                <div>
+                                  <div>{next["value"]}</div>
+                                  <div>{next["artist"]}</div>
+                                </div>
+                                <div className={"addButton"}>
+                                  <span className={"control-fa"}>
+                                    <FontAwesomeIcon icon={faPlus} />
+                                  </span>
                                 </div>
                               </div>
                             </div>
-                          </Fade>
+                          </div>
                         })}
                       </div>
                     </Accordion.Collapse>
@@ -450,36 +431,32 @@ class Search extends React.Component {
            </div>
           </div>
         )}
-        {tabName == "queue" && (
+        {tabName === "queue" && (
           <div className="full-div">
-            <div className={"flex-scrollable"}>
+            <div className="flex-scrollable">
               {selectedOptions.map((value) => {
-                return <Fade appear={true} in={true}>
-                  <div className={"flex-item-clickable"} onClick={() => this.showModalOptions(value)}>
-                    <img className={"album"} src={value["image"]}></img>
-                    <div className={"song-info"}>
-                      <div className={"player-details"}>
-                        <div>
-                          <div>{value["value"]}</div>
-                          <div>{value["artist"]}</div>
-                        </div>
-                        <div className={"controls"}>
-                          <span className={"play"}>
-                            {value.votes}
-                          </span>
-                          <span className={"control-fa"}>
-                            <FontAwesomeIcon icon={faEllipsisV} />
-                          </span>
-                        </div>
+                return <div key={value.id} className={"flex-item-clickable"} onClick={() => this.showModalOptions(value)}>
+                  <img className={"album"} src={value["image"]}></img>
+                  <div className={"song-info"}>
+                    <div className={"player-details"}>
+                      <div>
+                        <div>{value["value"]}</div>
+                        <div>{value["artist"]}</div>
+                      </div>
+                      <div className={"controls"}>
+                        <Badge variant="primary" className="play">{value.votes}</Badge>
+                        <span className={"control-fa"}>
+                          <FontAwesomeIcon icon={faEllipsisV} />
+                        </span>
                       </div>
                     </div>
                   </div>
-                </Fade>
+                </div>
               })}
             </div>
           </div>
         )}
-        {tabName == "settings" && (
+        {tabName === "settings" && (
           <div className="full-div">
             <div className={"flex-scrollable"}>
               <Button variant="danger" className="flex-button" onClick={this.deleteRoom}>Delete Room</Button>
