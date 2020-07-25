@@ -3,6 +3,7 @@ var io = require('socket.io')(3002, {
   pingTimeout: 60000,
 });
 const request = require('request');
+require('dotenv').config({path: __dirname+'/.env'})
 const { v4: uuidv4 } = require('uuid');
 
 room_to_creds = {}
@@ -150,7 +151,7 @@ setInterval(() => {
     for (const room in room_to_queue) {
       queue = room_to_queue[room]["queue"]
 
-      if (queue !== undefined) {
+      if (queue !== undefined && (queue.length > 0 || (room_to_queue[room]["currently_playing"] != undefined && room_to_queue[room]["currently_playing"]["progress"] != -1))) {
         const req = {
           url: 'https://api.spotify.com/v1/me/player/currently-playing',
           headers: {
@@ -161,17 +162,23 @@ setInterval(() => {
 
         request.get(req, function(error, response, body) {
           try {
-            if (!error && response.statusCode === 200) {
-              currently_playing_song = body["item"]["uri"];
-              progress = body["progress_ms"];
-              is_playing = body["is_playing"]
+            if (!error && (response.statusCode == 200 || response.statusCode == 204)) {
+              if(body === undefined) {
+                currently_playing_song = null;
+                progress = -1;
+                is_playing = false;
+              } else {
+                currently_playing_song = body["item"]["uri"];
+                progress = body["progress_ms"];
+                is_playing = body["is_playing"];
+              }
               is_not_playing = (is_playing === false && progress === 0)
               if (room_to_queue[room]["currently_playing"] != undefined) {
                 room_to_queue[room]["currently_playing"]["progress"] = progress
                 room_to_queue[room]["currently_playing"]["is_playing"] = is_playing
               }
               io.in(room).emit('queue', room_to_queue[room])
-              if (queue.length > 0 && (is_not_playing || (room_to_queue[room]["currently_playing"] && (currently_playing_song !== room_to_queue[room]["currently_playing"]["uri"])) || (room_to_queue[room]["currently_playing"] && room_to_queue[room]["currently_playing"]["next"]))) {
+              if (queue.length > 0 && (is_not_playing || (room_to_queue[room]["currently_playing"] && (currently_playing_song != null && currently_playing_song !== room_to_queue[room]["currently_playing"]["uri"])) || (room_to_queue[room]["currently_playing"] && room_to_queue[room]["currently_playing"]["next"]))) {
                 next_track = room_to_queue[room]["queue"].shift()
                 if(next_track) {
                   const new_song_req = {
@@ -199,6 +206,29 @@ setInterval(() => {
                   })
                 }
               }
+            } else {
+              console.log(response.statusCode)
+              var client_id = process.env.ROOM_CLIENT_ID
+              var client_secret = process.env.ROOM_CLIENT_SECRET
+              var authOptions = {
+                url: 'https://accounts.spotify.com/api/token',
+                form: {
+                  grant_type: 'refresh_token',
+                  refresh_token: room_to_creds[room].refresh_token,
+
+                },
+                headers: {
+                  'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64'))
+                },
+                json: true
+              }
+
+              request.post(authOptions, function(error, response, body) {
+                if (!error && response.statusCode === 200) {
+                  console.log(body.access_token)
+                  room_to_creds.access_token = body.access_token
+                }
+              })
             }
           } catch (err) {
             console.log("error from current song " + err)
@@ -209,4 +239,4 @@ setInterval(() => {
   } catch (err) {
     console.log("error from setInterval " + err)
   };
-}, 1000)
+}, 1500)

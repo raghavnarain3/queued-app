@@ -19,6 +19,9 @@ shared-spotify-queue/.dev-env
 server/.env
 server/.prod-env
 server/.dev-env
+shared-spotify-queue-backend/.env
+shared-spotify-queue-backend/.prod-env
+shared-spotify-queue-backend/.dev-env
 
 # misc
 shared-spotify-queue/.DS_Store
