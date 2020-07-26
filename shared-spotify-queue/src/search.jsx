@@ -1,7 +1,6 @@
 import React from 'react'
 import Button from 'react-bootstrap/Button';
 import Nav from 'react-bootstrap/Nav'
-import Accordion from 'react-bootstrap/Accordion'
 import Badge from 'react-bootstrap/Badge'
 import FormControl from 'react-bootstrap/FormControl'
 import ProgressBar from 'react-bootstrap/ProgressBar'
@@ -56,6 +55,10 @@ class Search extends React.Component {
     });
     socket.on('queue', data => {
       this.setState({ selectedOptions: data["queue"], currentSong: data["currently_playing"] || {} });
+    });
+    socket.on("reconnect", function() {
+      socket.emit('join room', {room: room, user: "roscoe"});
+      console.log("reconnected");
     });
     this.setState({ socket: socket });
   }
@@ -302,7 +305,7 @@ class Search extends React.Component {
               Add Songs from Playlist
             </Modal.Title>
           </Modal.Header>
-          <Modal.Body scrollable={true}>
+          <Modal.Body>
             <div className={"flex-item"}>
               <img className={"album"} src={modalPlaylist["image"]}></img>
               <div className={"song-info"}>
