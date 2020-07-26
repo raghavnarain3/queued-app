@@ -1,4 +1,5 @@
 import React from 'react'
+import ReactGA from 'react-ga';
 import Button from 'react-bootstrap/Button';
 import Nav from 'react-bootstrap/Nav'
 import Badge from 'react-bootstrap/Badge'
@@ -35,6 +36,11 @@ class Search extends React.Component {
     if(localStorage.getItem("access_key") === null || localStorage.getItem("refresh_key") == null) {
       const url = process.env.REACT_APP_BACKEND_URL + "/login?room=" + this.props.match.params.room;
       window.location.assign(url);
+    }
+    const googleAnalyticsKey = process.env.REACT_APP_GOOGLE_ANALYTICS
+    if (googleAnalyticsKey) {
+      ReactGA.initialize(googleAnalyticsKey);
+      ReactGA.pageview('/room');
     }
   }
 
