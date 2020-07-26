@@ -8,6 +8,7 @@ import Modal from 'react-bootstrap/Modal'
 import socketIOClient from "socket.io-client";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { ToastContainer, toast } from 'react-toastify';
+import Truncate from 'react-truncate';
 import 'react-toastify/dist/ReactToastify.css';
 import { faPlay, faPause, faForward, faPlus, faAngleDown, faArrowUp, faArrowDown, faEllipsisV} from '@fortawesome/free-solid-svg-icons'
 
@@ -280,8 +281,8 @@ class Search extends React.Component {
               <div className={"song-info"}>
                 <div className={"player-details"}>
                   <div>
-                    <div>{modalSong["value"]}</div>
-                    <div>{modalSong["artist"]}</div>
+                    <div><Truncate width={175}>{modalSong["value"]}</Truncate></div>
+                    <div><Truncate width={175}>{modalSong["artist"]}</Truncate></div>
                   </div>
                 </div>
               </div>
@@ -311,8 +312,8 @@ class Search extends React.Component {
               <div className={"song-info"}>
                 <div className={"player-details"}>
                   <div>
-                    <div>{modalPlaylist["value"]}</div>
-                    <div>{modalPlaylist["artist"]}</div>
+                    <div><Truncate width={175}>{modalPlaylist["value"]}</Truncate></div>
+                    <div><Truncate width={175}>{modalPlaylist["artist"]}</Truncate></div>
                   </div>
                 </div>
               </div>
@@ -325,8 +326,8 @@ class Search extends React.Component {
                   <div className={"song-info"}>
                     <div className={"player-details"}>
                       <div>
-                        <div>{next["value"]}</div>
-                        <div>{next["artist"]}</div>
+                        <div><Truncate width={175}>{next["value"]}</Truncate></div>
+                        <div><Truncate width={175}>{next["artist"]}</Truncate></div>
                       </div>
                       <div className={"addButton"}>
                         <span className={"control-fa"}>
@@ -376,8 +377,8 @@ class Search extends React.Component {
               <div className={"song-info"}>
                 <div className={"player-details"}>
                   <div>
-                    <div>{currentSong["value"]}</div>
-                    <div>{currentSong["artist"]}</div>
+                    <div><Truncate width={175}>{currentSong["value"]}</Truncate></div>
+                    <div><Truncate width={175}>{currentSong["artist"]}</Truncate></div>
                   </div>
                   <div className={"controls"}>
                     <span className={"play"} onClick={this.playOrPause}>
@@ -420,8 +421,8 @@ class Search extends React.Component {
                   <div className={"song-info"}>
                     <div className={"player-details"}>
                       <div>
-                        <div>{value["value"]}</div>
-                        <div>{value["artist"]}</div>
+                        <div><Truncate width={175}>{value["value"]}</Truncate></div>
+                        <div><Truncate width={175}>{value["artist"]}</Truncate></div>
                       </div>
                       <div className={"addButton"}>
                         <span className={"control-fa"}>
@@ -445,8 +446,8 @@ class Search extends React.Component {
                       <div className={"song-info"}>
                         <div className={"player-details"}>
                           <div>
-                            <div>{value["value"]}</div>
-                            <div>{value["artist"]}</div>
+                            <div><Truncate width={175}>{value["value"]}</Truncate></div>
+                            <div><Truncate width={175}>{value["artist"]}</Truncate></div>
                           </div>
                           <div className={"addButton"}>
                             <span className={"control-fa"}>
@@ -469,8 +470,8 @@ class Search extends React.Component {
                   <div className={"song-info"}>
                     <div className={"player-details"}>
                       <div>
-                        <div>{value["value"]}</div>
-                        <div>{value["artist"]}</div>
+                        <div><Truncate width={175}>{value["value"]}</Truncate></div>
+                        <div><Truncate width={175}>{value["artist"]}</Truncate></div>
                       </div>
                       <div className={"controls"}>
                         <Badge variant="primary" className="play">{value.votes}</Badge>
