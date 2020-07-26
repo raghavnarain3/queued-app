@@ -54,7 +54,7 @@ code {
   height: 90%;
   overflow-y: auto;
   align-items: center;
-  min-width: 350px;
+  min-width: 325px;
 }
 
 .flex-scrollable {
@@ -64,7 +64,7 @@ code {
   height: 100%;
   overflow-y: auto;
   align-items: center;
-  min-width: 350px;
+  min-width: 325px;
 }
 
 .flex-scrollable-modal {
@@ -75,7 +75,7 @@ code {
   height: 250px;
   overflow-y: auto;
   align-items: center;
-  min-width: 350px;
+  min-width: 325px;
 }
 
 .top-border-box {
@@ -186,7 +186,7 @@ code {
   flex-direction: row;
   width: 100%;
   min-height: 90px;
-  min-width: 350px;
+  min-width: 325px;
   align-items: center;
   border-color: hsl(0,0%,0%, 0);
   border-radius: 4px;
@@ -202,7 +202,7 @@ code {
   flex-direction: row;
   width: 100%;
   min-height: 90px;
-  min-width: 350px;
+  min-width: 325px;
   align-items: center;
   border-color: hsl(0,0%,0%, 0);
   border-radius: 4px;
