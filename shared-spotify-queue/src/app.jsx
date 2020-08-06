@@ -26,7 +26,7 @@ class App extends React.Component {
 
     return (
       <div className={"flex-container"}>
-        <h1>Cueued</h1>
+        <h1>cueued</h1>
         <Button className= "flex-button" href={process.env.REACT_APP_BACKEND_URL + "/create-room"}>Start a Room!</Button>
         <h3> or </h3>
         <div>

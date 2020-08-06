@@ -69,14 +69,11 @@ class Search extends React.Component {
       this.setState({ selectedOptions: data["queue"], currentSong: data["currently_playing"] || {}, owner: data.owner });
     });
     socket.on("reconnect", function() {
-      socket.emit('join room', {room: room, user: "roscoe"});
+      socket.emit('join room', {room: room, user: user })
       console.log("reconnected");
     });
 
     this.setState({ socket: socket }, this.joinRoom);
-    
-
-    this.setState({ socket: socket });
   }
 
   joinRoom = () => {

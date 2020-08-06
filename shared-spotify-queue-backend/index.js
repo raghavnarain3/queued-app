@@ -67,17 +67,21 @@ io.on('connection', function (socket) {
     if (room in room_to_queue) {
       obj = room_to_queue[room]["queue"].find(item => item.id === id);
       if(obj) {
+        const upvoteIndex = obj.downvotes.indexOf(socket_to_user[room][socket.id].id);
+        const downvoteIndex = obj.upvotes.indexOf(socket_to_user[room][socket.id].id);
         if(count > 0) {
-          obj.upvotes.push(socket_to_user[room][socket.id].id)
-          const index = obj.downvotes.indexOf(socket_to_user[room][socket.id].id);
-          if (index > -1) {
-            obj.downvotes.splice(index, 1);
+          if (upvoteIndex === -1) {
+            obj.upvotes.push(socket_to_user[room][socket.id].id)
+          }
+          if (downvoteIndex > -1) {
+            obj.downvotes.splice(downvoteIndex, 1);
           }
         } else {
-          obj.downvotes.push(socket_to_user[room][socket.id].id)
-          const index = obj.upvotes.indexOf(socket_to_user[room][socket.id].id);
-          if (index > -1) {
-            obj.upvotes.splice(index, 1);
+          if (downvoteIndex === -1) {
+            obj.downvotes.push(socket_to_user[room][socket.id].id)
+          }
+          if (upvoteIndex > -1) {
+            obj.upvotes.splice(upvoteIndex, 1);
           }
         }
         room_to_queue[room]["queue"].sort(function (a,b) {
