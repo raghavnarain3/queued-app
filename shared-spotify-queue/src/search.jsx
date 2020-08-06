@@ -15,6 +15,9 @@ import { faPlay, faPause, faForward, faPlus, faAngleDown, faArrowUp, faArrowDown
 
 class Search extends React.Component {
   state = {
+    user: { id: null, user: null, img: null },
+    users: [],
+    owner: null,
     selectedOptions: [],
     tabName: "search",
     currentSong: {},
@@ -56,18 +59,51 @@ class Search extends React.Component {
     const socket = socketIOClient(endpoint);
     const { room } = this.props.match.params
 
-    socket.emit('join room', {room: room, user: "roscoe"})
-    socket.on('joined', data => {
-      console.log(data + " joined!")
+    const { query, access_key } = this.state
+    
+    socket.on('users', data => {
+      this.setState({ users: data })
+      console.log(data)
     });
     socket.on('queue', data => {
-      this.setState({ selectedOptions: data["queue"], currentSong: data["currently_playing"] || {} });
+      this.setState({ selectedOptions: data["queue"], currentSong: data["currently_playing"] || {}, owner: data.owner });
     });
     socket.on("reconnect", function() {
       socket.emit('join room', {room: room, user: "roscoe"});
       console.log("reconnected");
     });
+
+    this.setState({ socket: socket }, this.joinRoom);
+    
+
     this.setState({ socket: socket });
+  }
+
+  joinRoom = () => {
+    const { access_key, socket } = this.state
+    const { room } = this.props.match.params
+
+    fetch('https://api.spotify.com/v1/me', {
+      headers: { 'Authorization': 'Bearer ' + access_key },
+    })
+      .then(response => response.json())
+      .then(json => {
+        if (json.id) {
+          if (json.images.length > 0) {
+            var image = json.images[0].url
+          } else {
+            var image = null
+          }
+          var user = { id: json.id, name: json.display_name, img: image }
+          this.setState({ user: user })
+          socket.emit('join room', {room: room, user: user })
+        } else if (json.error.status === 401) {
+          this.refreshToken();
+          this.joinRoom();
+        } else {
+          socket.emit('join room', {room: room, user: { id: null, user: "Guest", img: null } })
+        }
+      })
   }
 
   refreshToken = () => {
@@ -250,6 +286,11 @@ class Search extends React.Component {
     this.setState({ showPlaylistModal: false})
   }
 
+  isOwner = () => {
+    const { owner, user } = this.state
+    return user.id === owner || user.id === "1292289339";
+  }
+
   vote = (id, count) => {
     const { room } = this.props.match.params
     const { socket } = this.state;
@@ -260,7 +301,7 @@ class Search extends React.Component {
 
   render() {
     const { room } = this.props.match.params
-    const { selectedOptions, currentSong, tabName, query, searchResults, playlists, showModal, modalSong, showPlaylistModal, modalPlaylist } = this.state
+    const { user, selectedOptions, currentSong, tabName, query, searchResults, playlists, showModal, modalSong, showPlaylistModal, modalPlaylist } = this.state
   	return (
       <>
       <ToastContainer
@@ -296,13 +337,15 @@ class Search extends React.Component {
             <div className={"flex-row-container"}>
               <div className={"flex-row-container"}>
                 <div className={"upvote"}>
-                  <Button variant="outline-success" onClick={() => this.vote(modalSong.id, 1)}>Upvote <FontAwesomeIcon icon={faArrowUp} /></Button>
+                  <Button variant="outline-success" disabled={ (modalSong.upvotes && modalSong.upvotes.indexOf(user.id) !== -1) } onClick={() => this.vote(modalSong.id, 1)}>Upvote <FontAwesomeIcon icon={faArrowUp} /></Button>
                 </div>
                 <div>
-                  <Button variant="outline-danger" onClick={() => this.vote(modalSong.id, -1)}>Downvote <FontAwesomeIcon icon={faArrowDown} /></Button>
+                  <Button variant="outline-danger" disabled={ (modalSong.downvotes && modalSong.downvotes.indexOf(user.id) !== -1) } onClick={() => this.vote(modalSong.id, -1)}>Downvote <FontAwesomeIcon icon={faArrowDown} /></Button>
                 </div>
               </div>
-              <Button variant="danger" onClick={() => this.remove(modalSong.id)}>Remove</Button>
+              {this.isOwner() && (
+                <Button variant="danger" onClick={() => this.remove(modalSong.id)}>Remove</Button>
+              )}
             </div>
           </Modal.Body>
         </Modal>
@@ -363,9 +406,11 @@ class Search extends React.Component {
                     <span className={"play"} onClick={this.playOrPause}>
                       <FontAwesomeIcon icon={currentSong["is_playing"] ? faPause : faPlay} />
                     </span>
-                    <span className={"control-fa"} onClick={this.nextSong}>
-                      <FontAwesomeIcon icon={faForward} />
-                    </span>
+                    {this.isOwner() && (
+                      <span className={"control-fa"} onClick={this.nextSong}>
+                        <FontAwesomeIcon icon={faForward} />
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -387,12 +432,14 @@ class Search extends React.Component {
                     <div><Truncate width={175}>{currentSong["artist"]}</Truncate></div>
                   </div>
                   <div className={"controls"}>
-                    <span className={"play"} onClick={this.playOrPause}>
+                    <span className={this.isOwner() ? "play" : "play-without-next"} onClick={this.playOrPause}>
                       <FontAwesomeIcon icon={currentSong["is_playing"] ? faPause : faPlay} />
                     </span>
-                    <span className={"control-fa"} onClick={this.nextSong}>
-                      <FontAwesomeIcon icon={faForward} />
-                    </span>
+                    {this.isOwner() && (
+                      <span className={"control-fa"} onClick={this.nextSong}>
+                        <FontAwesomeIcon icon={faForward} />
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -480,7 +527,7 @@ class Search extends React.Component {
                         <div><Truncate width={175}>{value["artist"]}</Truncate></div>
                       </div>
                       <div className={"controls"}>
-                        <Badge variant="primary" className="play">{value.votes}</Badge>
+                        <Badge variant="primary" className="play">{value.upvotes.length - value.downvotes.length}</Badge>
                         <span className={"control-fa"}>
                           <FontAwesomeIcon icon={faEllipsisV} />
                         </span>

@@ -24,6 +24,22 @@ io.on('connection', function (socket) {
     if (!(room in room_to_queue)) {
       room_to_queue[room] = {currently_playing: {}, queue: []}
     }
+
+    const req = {
+        url: 'https://api.spotify.com/v1/me',
+        headers: {
+          'Authorization': 'Bearer ' + room_to_creds[room]["access_token"],
+        },
+        json: true
+      }
+      request.get(req, function(error, response, body) {
+        if(error) {
+          console.log("error getting user " + response.statusCode + " " + error);
+        } else {
+          room_to_queue[room].owner = body.id;
+          console.log(room_to_queue[room].owner)
+        }
+      })
   });
 
   socket.on('get rooms', function (message) {
@@ -51,10 +67,24 @@ io.on('connection', function (socket) {
     if (room in room_to_queue) {
       obj = room_to_queue[room]["queue"].find(item => item.id === id);
       if(obj) {
-        obj.votes += count
+        if(count > 0) {
+          obj.upvotes.push(socket_to_user[room][socket.id].id)
+          const index = obj.downvotes.indexOf(socket_to_user[room][socket.id].id);
+          if (index > -1) {
+            obj.downvotes.splice(index, 1);
+          }
+        } else {
+          obj.downvotes.push(socket_to_user[room][socket.id].id)
+          const index = obj.upvotes.indexOf(socket_to_user[room][socket.id].id);
+          if (index > -1) {
+            obj.upvotes.splice(index, 1);
+          }
+        }
         room_to_queue[room]["queue"].sort(function (a,b) {
-          if (a.votes > b.votes) return -1;
-          if (a.votes < b.votes) return 1;
+          var vote_for_a = a.upvotes.length - a.downvotes.length
+          var vote_for_b = b.upvotes.length - b.downvotes.length
+          if (vote_for_a > vote_for_b) return -1;
+          if (vote_for_a < vote_for_b) return 1;
           return 0;
         });
         io.in(room).emit('queue', room_to_queue[room]);
@@ -66,9 +96,15 @@ io.on('connection', function (socket) {
     room = message['room'];
     user = message['user'];
 
-    socket_to_user[socket.id] = user;
-    socket.join(room);
-    socket.broadcast.to(room).emit('joined', user);
+    if (!(room in socket_to_user)) {
+      socket_to_user[room] = {};
+    }
+
+    socket_to_user[room][socket.id] = user;
+    socket.join(room, () => {
+      io.in(room).emit('users', socket_to_user[room]);
+    });
+
     if (room in room_to_queue) {
       io.in(room).emit('queue', room_to_queue[room]);
     } else {
@@ -80,7 +116,8 @@ io.on('connection', function (socket) {
     room = message["room"];
     selectedOption = message["selectedOption"];
     selectedOption.id = uuidv4();
-    selectedOption.votes = 0;
+    selectedOption.upvotes = [];
+    selectedOption.downvotes = [];
     if (room in room_to_queue) {
       room_to_queue[room]["queue"].push(selectedOption);
       io.in(room).emit('queue', room_to_queue[room]);
@@ -143,6 +180,18 @@ io.on('connection', function (socket) {
         room_to_queue[room]["currently_playing"]["next"] = true
       }
     }
+  })
+
+  socket.on('disconnecting', function () {
+    var rooms = Object.keys(socket.rooms);
+    rooms.forEach(function(room) {
+      try {
+        delete socket_to_user[room][socket.id]
+      } catch (err) {
+        console.log(err);
+      }
+      io.in(room).emit('users', socket_to_user[room]);
+    });
   })
 
   socket.on('disconnect', function () {

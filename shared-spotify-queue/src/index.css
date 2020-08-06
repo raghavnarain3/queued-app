@@ -14,22 +14,31 @@ html {
   height: 100%;
 }
 
+button:disabled {
+  cursor: not-allowed;
+  pointer-events: all !important;
+}
+
 /* If the screen size is 600px wide or less, set the font-size of <div> to 30px */
 @media screen and (max-width: 600px) {
   body {
-    font-size: 12px;
+    font-size: 13px;
   }
 
   .btn {
-    font-size: 12px;
+    font-size: 13px;
   }
 
   .form-control {
-    font-size: 12px;
+    font-size: 16px;
+  }
+
+  input {
+    font-size: 16px;
   }
 
   .badge {
-    font-size: 12px!important;
+    font-size: 13px!important;
   }
 }
 
@@ -45,6 +54,11 @@ code {
   height: 100%;
   justify-content: safe center;
   align-items: safe center;
+}
+
+.info-text {
+  width: 50%;
+  text-align: center;
 }
 
 .flex-scrollable-search {
@@ -135,7 +149,7 @@ code {
 
 .controls {
   margin-right: 20px;
-  width: 50px;
+  max-width: 55px;
 }
 
 .addButton {
@@ -147,10 +161,19 @@ code {
   cursor: pointer;
 }
 
+.play-without-next {
+  cursor: pointer;
+}
+
 @media(hover: hover) and (pointer: fine) {
   .play:hover {
     color: hsl(0,0%,80%);
   }
+
+  .play-without-next:hover {
+    color: hsl(0,0%,80%);
+  }
+
   .control-fa:hover {
     color: hsl(0,0%,80%);
   }
@@ -163,6 +186,11 @@ code {
 .play:active {
   color: hsl(0,0%,80%);
 }
+
+.play-without-next:active {
+    color: hsl(0,0%,80%);
+  }
+
 .control-fa:active {
   color: hsl(0,0%,80%);
 }
