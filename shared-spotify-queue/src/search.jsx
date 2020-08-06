@@ -63,12 +63,12 @@ class Search extends React.Component {
     
     socket.on('users', data => {
       this.setState({ users: data })
-      console.log(data)
     });
     socket.on('queue', data => {
       this.setState({ selectedOptions: data["queue"], currentSong: data["currently_playing"] || {}, owner: data.owner });
     });
-    socket.on("reconnect", function() {
+    socket.on("reconnect", () => {
+      const { user } = this.state;
       socket.emit('join room', {room: room, user: user })
       console.log("reconnected");
     });
@@ -161,7 +161,6 @@ class Search extends React.Component {
     })
       .then(response => response.json())
       .then(json => {
-        console.log(json)
         if (json["items"]) {
           let results = json["items"].map((item) => (
             { value: item["name"], artist: item["owner"]["display_name"], uri: item["tracks"]["href"], image: item["images"][0]["url"] }
