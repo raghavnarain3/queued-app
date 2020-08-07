@@ -538,6 +538,7 @@ class Search extends React.Component {
         {tabName === "settings" && (
           <div className="full-div">
             <div className={"flex-scrollable"}>
+              <a href='https://ko-fi.com/V7V820VX2' target='_blank'><img height='36' style={ { border: '0px', height:'36px'} } src='https://cdn.ko-fi.com/cdn/kofi2.png?v=2' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
               <Button variant="danger" className="flex-button" onClick={this.deleteRoom}>Delete Room</Button>
             </div>
           </div>
