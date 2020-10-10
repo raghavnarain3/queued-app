@@ -289,10 +289,19 @@ class Search extends React.Component {
 
   vote = (id, count) => {
     const { room } = this.props.match.params
-    const { socket } = this.state;
-    var message = {room: room, id: id, count: count}
+    const { socket, user } = this.state;
+    var message = {room: room, id: id, count: count, user: user}
     socket.emit('vote', message);
     this.handleCloseModal()
+  }
+
+  getIndex = (arr, user_id) => {
+    for(var i = 0; i < arr.length; i++) {
+      if(arr[i].id === user_id) {
+        return i;
+      }
+    }
+      return -1; //to handle the case where the value doesn't exist
   }
 
   render() {
@@ -336,14 +345,35 @@ class Search extends React.Component {
             <div className={"flex-row-container"}>
               <div className={"flex-row-container"}>
                 <div className={"upvote"}>
-                  <Button variant="outline-success" disabled={ (modalSong.upvotes && modalSong.upvotes.indexOf(user.id) !== -1) } onClick={() => this.vote(modalSong.id, 1)}>Upvote <FontAwesomeIcon icon={faArrowUp} /></Button>
+                  <div className="votes-list">
+                    <div>Upvoted By:</div>
+                    {modalSong && modalSong.upvotes && modalSong.upvotes.map((user) => {
+                      return <div className={"user-list-item"}>
+                        <img className={"user-img"} src={user.img}></img>
+                        <div className={"user-name"}>{user.name}</div>
+                      </div>
+                    })}
+                  </div>
+                  <Button className={"vote-button"} variant="outline-success" disabled={ (modalSong.upvotes && this.getIndex(modalSong.upvotes, user.id) !== -1) } onClick={() => this.vote(modalSong.id, 1)}>Upvote <FontAwesomeIcon icon={faArrowUp} /></Button>
                 </div>
                 <div>
-                  <Button variant="outline-danger" disabled={ (modalSong.downvotes && modalSong.downvotes.indexOf(user.id) !== -1) } onClick={() => this.vote(modalSong.id, -1)}>Downvote <FontAwesomeIcon icon={faArrowDown} /></Button>
+                  <div className="votes-list">
+                    <div>Downvoted By:</div>
+                    {modalSong && modalSong.downvotes && modalSong.downvotes.map((user) => {
+                      return <div className={"user-list-item"}>
+                        <img className={"user-img"} src={user.img}></img>
+                        <div className={"user-name"}>{user.name}</div>
+                      </div>
+                    })}
+                  </div>
+                  <Button className={"vote-button"} variant="outline-danger" disabled={ (modalSong.downvotes && this.getIndex(modalSong.downvotes, user.id) !== -1) } onClick={() => this.vote(modalSong.id, -1)}>Downvote <FontAwesomeIcon icon={faArrowDown} /></Button>
                 </div>
               </div>
               {this.isOwner() && (
-                <Button variant="danger" onClick={() => this.remove(modalSong.id)}>Remove</Button>
+                <div>
+                  <div className="votes-list"></div>
+                  <Button variant="danger" onClick={() => this.remove(modalSong.id)}>Remove</Button>
+                </div>
               )}
             </div>
           </Modal.Body>

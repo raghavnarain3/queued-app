@@ -60,25 +60,40 @@ io.on('connection', function (socket) {
     }
   });
 
+
   socket.on('vote', function (message) {
     room = message['room'];
     id = message['id'];
     count = message['count']
+    user = message['user']
     if (room in room_to_queue) {
       obj = room_to_queue[room]["queue"].find(item => item.id === id);
       if(obj) {
-        const upvoteIndex = obj.upvotes.indexOf(socket_to_user[room][socket.id].id);
-        const downvoteIndex = obj.downvotes.indexOf(socket_to_user[room][socket.id].id);
+
+        var upvoteIndex = -1;
+        for(var i = 0; i < obj.upvotes.length; i++) {
+          if(obj.upvotes[i].id === user.id) {
+            upvoteIndex = i;
+          }
+        }
+
+        var downvoteIndex = -1;
+        for(var i = 0; i < obj.downvotes.length; i++) {
+          if(obj.downvotes[i].id === user.id) {
+            downvoteIndex = i;
+          }
+        }
+
         if(count > 0) {
           if (upvoteIndex === -1) {
-            obj.upvotes.push(socket_to_user[room][socket.id].id)
+            obj.upvotes.push(user)
           }
           if (downvoteIndex > -1) {
             obj.downvotes.splice(downvoteIndex, 1);
           }
         } else {
           if (downvoteIndex === -1) {
-            obj.downvotes.push(socket_to_user[room][socket.id].id)
+            obj.downvotes.push(user);
           }
           if (upvoteIndex > -1) {
             obj.upvotes.splice(upvoteIndex, 1);
