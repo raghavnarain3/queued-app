@@ -36,7 +36,7 @@ io.on('connection', function (socket) {
         if(error) {
           console.log("error getting user " + response.statusCode + " " + error);
         } else {
-          room_to_queue[room].owner = body.id;
+          room_to_queue[room].owner = { id: body.id, name: body.display_name };
           console.log(room_to_queue[room].owner)
         }
       })

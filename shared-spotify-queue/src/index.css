@@ -349,3 +349,9 @@ button.close {
   background-color: #eb906e!important;
   margin-top: 1px;
 }
+
+.coffee-button {
+  border: 0px; 
+  height: 36px;
+  margin-bottom: 20px;
+}

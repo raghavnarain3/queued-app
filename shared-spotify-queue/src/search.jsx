@@ -15,9 +15,9 @@ import { faPlay, faPause, faForward, faPlus, faAngleDown, faArrowUp, faArrowDown
 
 class Search extends React.Component {
   state = {
-    user: { id: null, user: null, img: null },
+    user: { id: null, name: null, img: null },
     users: [],
-    owner: null,
+    owner: { id: null, name: null },
     selectedOptions: [],
     tabName: "search",
     currentSong: {},
@@ -284,7 +284,7 @@ class Search extends React.Component {
 
   isOwner = () => {
     const { owner, user } = this.state
-    return user.id === owner || user.id === "1292289339";
+    return user.id === owner.id || user.id === "1292289339";
   }
 
   vote = (id, count) => {
@@ -297,7 +297,7 @@ class Search extends React.Component {
 
   render() {
     const { room } = this.props.match.params
-    const { user, selectedOptions, currentSong, tabName, query, searchResults, playlists, showModal, modalSong, showPlaylistModal, modalPlaylist } = this.state
+    const { owner, user, selectedOptions, currentSong, tabName, query, searchResults, playlists, showModal, modalSong, showPlaylistModal, modalPlaylist } = this.state
   	return (
       <>
       <ToastContainer
@@ -326,6 +326,9 @@ class Search extends React.Component {
                   <div>
                     <div><Truncate width={175}>{modalSong["value"]}</Truncate></div>
                     <div><Truncate width={175}>{modalSong["artist"]}</Truncate></div>
+                  </div>
+                  <div className={"controls"}>
+                    {modalSong.upvotes && (<Badge variant="primary" className="play">{modalSong.upvotes.length - modalSong.downvotes.length}</Badge>)}
                   </div>
                 </div>
               </div>
@@ -387,7 +390,7 @@ class Search extends React.Component {
             </div>
           </Modal.Body>
         </Modal>
-        <div>Room: <b>{room}</b></div>
+        <div>{owner.name}'s Room: <b>{room}</b></div>
         {!this.showNowPlaying() && (
           <div className={"now-playing"}>
             <div className={"flex-item"}>
@@ -538,8 +541,10 @@ class Search extends React.Component {
         {tabName === "settings" && (
           <div className="full-div">
             <div className={"flex-scrollable"}>
-              <a href='https://ko-fi.com/V7V820VX2' target='_blank'><img height='36' style={ { border: '0px', height:'36px'} } src='https://cdn.ko-fi.com/cdn/kofi2.png?v=2' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
-              <Button variant="danger" className="flex-button" onClick={this.deleteRoom}>Delete Room</Button>
+              <a href='https://ko-fi.com/V7V820VX2' target='_blank'>
+                <img height='36' className={"coffee-button"} src='https://cdn.ko-fi.com/cdn/kofi2.png?v=2' border='0' alt='Buy Me a Coffee at ko-fi.com' />
+              </a>
+              {this.isOwner() && (<Button variant="danger" className="flex-button" onClick={this.deleteRoom}>Delete Room</Button>)}
             </div>
           </div>
         )}
