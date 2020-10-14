@@ -381,12 +381,12 @@ button.close {
 .user-name {
   margin-top: 3px;
   margin-right: 5px;
+  margin-right: 15px;
 }
 
 .user-list-item {
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
   width: 120px;
   margin-bottom: 5px;
 }

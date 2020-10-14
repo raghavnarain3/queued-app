@@ -1,5 +1,6 @@
 import React from 'react'
-import ReactGA from 'react-ga';
+import ReactGA from 'react-ga'
+import ReactLoading from 'react-loading';
 import Button from 'react-bootstrap/Button';
 import Nav from 'react-bootstrap/Nav'
 import Badge from 'react-bootstrap/Badge'
@@ -437,6 +438,9 @@ class Search extends React.Component {
                     </div>
                   </div>
                 })}
+                {!modalPlaylist["results"] && (
+                  <ReactLoading type={"bars"} height={50} width={50} />
+                )}
               </div>
             </div>
           </Modal.Body>
