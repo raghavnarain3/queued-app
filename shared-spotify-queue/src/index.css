@@ -386,7 +386,7 @@ button.close {
 .user-list-item {
   display: flex;
   flex-direction: row;
-  justify-content: space-around;
+  justify-content: space-between;
   width: 120px;
   margin-bottom: 5px;
 }

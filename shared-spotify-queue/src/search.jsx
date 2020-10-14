@@ -175,31 +175,52 @@ class Search extends React.Component {
       })
   }
 
-  getPlaylistTracks = (value) => {
-    const { playlists, access_key } = this.state
-    this.setState({showPlaylistModal: true, modalPlaylist: value})
-    fetch(value.uri, {
-      headers: { 'Authorization': 'Bearer ' + access_key },
+  getTracks = (url, tracks) => {
+    const { access_key } = this.state
+    return new Promise((resolve, reject) => fetch(url, {
+      headers: { 'Authorization': 'Bearer ' + access_key }
     })
-      .then(response => response.json())
-      .then(json => {
-        if (json["items"]) {
-          let results = json["items"].filter((item) => {
-            if (item["track"]) {
-              return true
+      .then(response => response.json()).catch(reject)
+        .then(json => {
+          if (json.items) {
+            let results = json.items.filter((item) => {
+              if (item.track) {
+                return true
+              } else {
+                return false
+              }
+            }).map((item) => (
+              {
+                value: item.track.name,
+                artist: item.track.artists[0].name,
+                uri: item.track.uri,
+                image: item.track.album.images[0].url,
+                duration: item.track.duration_ms,
+                progress: 0,
+                is_playing: true
+              }
+            ))
+            tracks = tracks.concat(results)
+
+            if (json.next) {
+              this.getTracks(json.next, tracks).then(resolve).catch(reject)
             } else {
-              return false
+              resolve(tracks);
             }
-          }).map((item) => (
-            { value: item["track"]["name"], artist: item["track"]["artists"][0]["name"], uri: item["track"]["uri"], image: item["track"]["album"]["images"][0]["url"], duration: item["track"]["duration_ms"], progress: 0, is_playing: true }
-          ))
-          value["results"] = results
-          this.setState({ playlists: playlists })
-        } else if (json.error.status === 401) {
-          this.refreshToken();
-          this.getPlaylistTracks(value);
-        }
-      })
+          } else if (json.error.status === 401) {
+            this.refreshToken();
+            this.getTracks(url, tracks);
+          }
+        }).catch(reject))
+  }
+
+  getPlaylistTracks = (value) => {
+    this.setState({showPlaylistModal: true, modalPlaylist: value})
+    if (!value.results) {
+      this.getTracks(value.uri, []).then(tracks => {
+        value.results = tracks
+      }).catch(console.error)
+    }
   }
 
   handleKeyPress = (event) => {
@@ -348,7 +369,7 @@ class Search extends React.Component {
                   <div className="votes-list">
                     <div>Upvoted By:</div>
                     {modalSong && modalSong.upvotes && modalSong.upvotes.map((user) => {
-                      return <div className={"user-list-item"}>
+                      return <div key={user.id} className={"user-list-item"}>
                         <img className={"user-img"} src={user.img}></img>
                         <div className={"user-name"}>{user.name}</div>
                       </div>
@@ -397,25 +418,25 @@ class Search extends React.Component {
               </div>
             </div>
             <div className={"top-border-box"}>
-            <div className={"flex-scrollable-modal"}>
-              {modalPlaylist["results"] && modalPlaylist["results"].map((next) => {
-                return <div className={"flex-item-clickable"} onClick={() => this.onChange(next)}>
-                  <img className={"album"} src={next["image"]}></img>
-                  <div className={"song-info"}>
-                    <div className={"player-details"}>
-                      <div>
-                        <div><Truncate width={175}>{next["value"]}</Truncate></div>
-                        <div><Truncate width={175}>{next["artist"]}</Truncate></div>
-                      </div>
-                      <div className={"addButton"}>
-                        <span className={"control-fa"}>
-                          <FontAwesomeIcon icon={faPlus} />
-                        </span>
+              <div className={"flex-scrollable-modal"}>
+                {modalPlaylist["results"] && modalPlaylist["results"].map((next) => {
+                  return <div key={next.uri} className={"flex-item-clickable"} onClick={() => this.onChange(next)}>
+                    <img className={"album"} src={next["image"]}></img>
+                    <div className={"song-info"}>
+                      <div className={"player-details"}>
+                        <div>
+                          <div><Truncate width={175}>{next["value"]}</Truncate></div>
+                          <div><Truncate width={175}>{next["artist"]}</Truncate></div>
+                        </div>
+                        <div className={"addButton"}>
+                          <span className={"control-fa"}>
+                            <FontAwesomeIcon icon={faPlus} />
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              })}
+                })}
               </div>
             </div>
           </Modal.Body>
