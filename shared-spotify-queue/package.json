@@ -25,6 +25,7 @@
     "react-toastify": "^6.0.8",
     "react-transition-group": "^4.4.1",
     "react-truncate": "^2.4.0",
+    "react-window": "^1.8.5",
     "socket.io-client": "^2.3.0",
     "uuid": "^8.2.0"
   },

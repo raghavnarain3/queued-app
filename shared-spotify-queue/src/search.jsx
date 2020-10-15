@@ -1,6 +1,7 @@
 import React from 'react'
 import ReactGA from 'react-ga'
 import ReactLoading from 'react-loading';
+import { FixedSizeList as List } from "react-window";
 import Button from 'react-bootstrap/Button';
 import Nav from 'react-bootstrap/Nav'
 import Badge from 'react-bootstrap/Badge'
@@ -330,6 +331,31 @@ class Search extends React.Component {
   render() {
     const { room } = this.props.match.params
     const { owner, user, selectedOptions, currentSong, tabName, query, searchResults, playlists, showModal, modalSong, showPlaylistModal, modalPlaylist } = this.state
+    const Row = ({ index, style }) => {
+      return <div style={{
+        ...style,
+        top: style.top + 10,
+        height: style.height - 10
+      }}>
+        <div key={index} className={"flex-item-clickable"} onClick={() => this.onChange(modalPlaylist.results[index])}>
+          <img className={"album"} src={modalPlaylist.results[index].image}></img>
+          <div className={"song-info"}>
+            <div className={"player-details"}>
+              <div>
+                <div><Truncate width={175}>{modalPlaylist.results[index].value}</Truncate></div>
+                <div><Truncate width={175}>{modalPlaylist.results[index].artist}</Truncate></div>
+              </div>
+              <div className={"addButton"}>
+                <span className={"control-fa"}>
+                  <FontAwesomeIcon icon={faPlus} />
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    };
+
   	return (
       <>
       <ToastContainer
@@ -420,25 +446,19 @@ class Search extends React.Component {
               </div>
             </div>
             <div className={"top-border-box"}>
-              <div className={"flex-scrollable-modal"}>
-                {modalPlaylist["results"] && modalPlaylist["results"].map((next, index) => {
-                  return <div key={index} className={"flex-item-clickable"} onClick={() => this.onChange(next)}>
-                    <img className={"album"} src={next["image"]}></img>
-                    <div className={"song-info"}>
-                      <div className={"player-details"}>
-                        <div>
-                          <div><Truncate width={175}>{next["value"]}</Truncate></div>
-                          <div><Truncate width={175}>{next["artist"]}</Truncate></div>
-                        </div>
-                        <div className={"addButton"}>
-                          <span className={"control-fa"}>
-                            <FontAwesomeIcon icon={faPlus} />
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                })}
+              <div className={"flex-scrollable"}>
+                {modalPlaylist["results"] && (
+                  <List
+                    height={250}
+                    itemCount={modalPlaylist.results.length}
+                    itemSize={100}
+                    width={"100%"}
+                    overscanCount={5}
+                  >
+                    {Row}
+                  </List>
+                )}
+
                 {!modalPlaylist["results"] && (
                   <ReactLoading type={"bars"} height={50} width={50} />
                 )}
