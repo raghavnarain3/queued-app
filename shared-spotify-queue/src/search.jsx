@@ -158,7 +158,7 @@ class Search extends React.Component {
   getPlaylists = () => {
     const { access_key } = this.state
 
-    fetch('https://api.spotify.com/v1/me/playlists', {
+    fetch('https://api.spotify.com/v1/me/playlists?limit=50', {
       headers: { 'Authorization': 'Bearer ' + access_key },
     })
       .then(response => response.json())
@@ -446,7 +446,7 @@ class Search extends React.Component {
               </div>
             </div>
             <div className={"top-border-box"}>
-              <div className={"flex-scrollable"}>
+              <div className={"flex-scrollable-modal"}>
                 {modalPlaylist["results"] && (
                   <List
                     height={250}
