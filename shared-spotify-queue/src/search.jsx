@@ -164,7 +164,7 @@ class Search extends React.Component {
       .then(json => {
         if (json["items"]) {
           let results = json["items"].map((item) => (
-            { value: item["name"], artist: item["owner"]["display_name"], uri: item["tracks"]["href"], image: item["images"][0]["url"] }
+            { value: item["name"], artist: item["owner"]["display_name"], uri: item["tracks"]["href"], image: item.images[0] ? item.images[0].url : null }
           ))
           this.setState({ playlists: results })
         } else if (json.error.status === 401) {
@@ -195,7 +195,7 @@ class Search extends React.Component {
                 value: item.track.name,
                 artist: item.track.artists[0].name,
                 uri: item.track.uri,
-                image: item.track.album.images[0].url,
+                image: item.track.album.images[0] ? item.track.album.images[0].url : null,
                 duration: item.track.duration_ms,
                 progress: 0,
                 is_playing: true
@@ -220,6 +220,7 @@ class Search extends React.Component {
     if (!value.results) {
       this.getTracks(value.uri, []).then(tracks => {
         value.results = tracks
+        this.setState({ modalPlaylist: value })
       }).catch(console.error)
     }
   }
@@ -369,8 +370,8 @@ class Search extends React.Component {
                 <div className={"upvote"}>
                   <div className="votes-list">
                     <div>Upvoted By:</div>
-                    {modalSong && modalSong.upvotes && modalSong.upvotes.map((user) => {
-                      return <div key={user.id} className={"user-list-item"}>
+                    {modalSong && modalSong.upvotes && modalSong.upvotes.map((user, index) => {
+                      return <div key={index} className={"user-list-item"}>
                         <img className={"user-img"} src={user.img}></img>
                         <div className={"user-name"}>{user.name}</div>
                       </div>
@@ -381,8 +382,8 @@ class Search extends React.Component {
                 <div>
                   <div className="votes-list">
                     <div>Downvoted By:</div>
-                    {modalSong && modalSong.downvotes && modalSong.downvotes.map((user) => {
-                      return <div className={"user-list-item"}>
+                    {modalSong && modalSong.downvotes && modalSong.downvotes.map((user, index) => {
+                      return <div key={index} className={"user-list-item"}>
                         <img className={"user-img"} src={user.img}></img>
                         <div className={"user-name"}>{user.name}</div>
                       </div>
@@ -420,8 +421,8 @@ class Search extends React.Component {
             </div>
             <div className={"top-border-box"}>
               <div className={"flex-scrollable-modal"}>
-                {modalPlaylist["results"] && modalPlaylist["results"].map((next) => {
-                  return <div key={next.uri} className={"flex-item-clickable"} onClick={() => this.onChange(next)}>
+                {modalPlaylist["results"] && modalPlaylist["results"].map((next, index) => {
+                  return <div key={index} className={"flex-item-clickable"} onClick={() => this.onChange(next)}>
                     <img className={"album"} src={next["image"]}></img>
                     <div className={"song-info"}>
                       <div className={"player-details"}>
@@ -522,8 +523,8 @@ class Search extends React.Component {
           <div className="full-div">
             <FormControl className="query" ref={this.textInput} type="text" placeholder="Search for a song..." defaultValue={query} onKeyPress={this.handleKeyPress} onChange={() => this.handleChange()} />
             <div className={"flex-scrollable-search"}>
-              {searchResults.map((value) => {
-                return <div key={value.uri} className={"flex-item-clickable"} onClick={() => this.onChange(value)}>
+              {searchResults.map((value, index) => {
+                return <div key={index} className={"flex-item-clickable"} onClick={() => this.onChange(value)}>
                   <img className={"album"} src={value["image"]}></img>
                   <div className={"song-info"}>
                     <div className={"player-details"}>
@@ -546,9 +547,9 @@ class Search extends React.Component {
         {tabName == "playlists" && (
           <div className="full-div">
            <div className={"flex-scrollable"}>
-              {playlists.map((value) => {
+              {playlists.map((value, index) => {
                 return (
-                  <div key={value.uri} className={"flex-item-clickable"} onClick={() => this.getPlaylistTracks(value)}>
+                  <div key={index} className={"flex-item-clickable"} onClick={() => this.getPlaylistTracks(value)}>
                     <img className={"album"} src={value["image"]}></img>
                       <div className={"song-info"}>
                         <div className={"player-details"}>
@@ -571,8 +572,8 @@ class Search extends React.Component {
         {tabName === "queue" && (
           <div className="full-div">
             <div className="flex-scrollable">
-              {selectedOptions.map((value) => {
-                return <div key={value.id} className={"flex-item-clickable"} onClick={() => this.showModalOptions(value)}>
+              {selectedOptions.map((value, index) => {
+                return <div key={index} className={"flex-item-clickable"} onClick={() => this.showModalOptions(value)}>
                   <img className={"album"} src={value["image"]}></img>
                   <div className={"song-info"}>
                     <div className={"player-details"}>
