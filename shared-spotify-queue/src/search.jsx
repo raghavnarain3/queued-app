@@ -234,8 +234,8 @@ class Search extends React.Component {
 
   onChange = (selectedOption) => {
     const { room } = this.props.match.params
-    const { socket } = this.state;
-    var message = {room: room, selectedOption: selectedOption}
+    const { socket, user } = this.state;
+    var message = {room: room, selectedOption: {...selectedOption, user: user}}
     socket.emit('add', message);
     toast.info(`Added ${selectedOption["value"]} to the queue`);
   }
@@ -328,6 +328,14 @@ class Search extends React.Component {
       return -1; //to handle the case where the value doesn't exist
   }
 
+  getImage = (img) => {
+    if(img) {
+      return img
+    }
+
+    return "/empty_user.png"
+  }
+
   render() {
     const { room } = this.props.match.params
     const { owner, user, selectedOptions, currentSong, tabName, query, searchResults, playlists, showModal, modalSong, showPlaylistModal, modalPlaylist } = this.state
@@ -377,6 +385,12 @@ class Search extends React.Component {
             </Modal.Title>
           </Modal.Header>
           <Modal.Body>
+            {modalSong.user && (
+              <div className={"added-by-item"}>
+                <img className={"user-img"} src={this.getImage(modalSong.user.img)}></img>
+                <div className={"user-name"}>{modalSong.user.name}</div>
+              </div>
+            )}
             <div className={"flex-item"}>
               <img className={"album"} src={modalSong["image"]}></img>
               <div className={"song-info"}>
@@ -398,7 +412,7 @@ class Search extends React.Component {
                     <div>Upvoted By:</div>
                     {modalSong && modalSong.upvotes && modalSong.upvotes.map((user, index) => {
                       return <div key={index} className={"user-list-item"}>
-                        <img className={"user-img"} src={user.img}></img>
+                        <img className={"user-img"} src={this.getImage(user.img)}></img>
                         <div className={"user-name"}>{user.name}</div>
                       </div>
                     })}
@@ -410,7 +424,7 @@ class Search extends React.Component {
                     <div>Downvoted By:</div>
                     {modalSong && modalSong.downvotes && modalSong.downvotes.map((user, index) => {
                       return <div key={index} className={"user-list-item"}>
-                        <img className={"user-img"} src={user.img}></img>
+                        <img className={"user-img"} src={this.getImage(user.img)}></img>
                         <div className={"user-name"}>{user.name}</div>
                       </div>
                     })}

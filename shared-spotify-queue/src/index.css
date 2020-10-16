@@ -382,6 +382,7 @@ button.close {
   margin-top: 3px;
   margin-right: 5px;
   margin-left: 15px;
+  font-size: 10px;
 }
 
 .user-list-item {
@@ -389,4 +390,11 @@ button.close {
   flex-direction: row;
   width: 120px;
   margin-bottom: 5px;
+}
+
+.added-by-item {
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 5px;
+  float: right;
 }
