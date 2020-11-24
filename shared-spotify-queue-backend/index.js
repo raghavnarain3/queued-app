@@ -5,6 +5,8 @@ var io = require('socket.io')(3002, {
 const request = require('request');
 require('dotenv').config({path: __dirname+'/.env'})
 const { v4: uuidv4 } = require('uuid');
+const Redis = require("ioredis");
+const redis = new Redis();
 
 room_to_creds = {}
 room_to_queue = {}
@@ -20,6 +22,12 @@ io.on('connection', function (socket) {
     access_token = message['access_token'];
     refresh_token = message['refresh_token'];
 
+    redis.sadd('rooms_set', room)
+    redis.set(`${room}:access_token`, access_token)
+    redis.set(`${room}:refresh_token`, refresh_token)
+    redis.setnx(`${room}:current_song`, JSON.stringify({}))
+    redis.setnx(`${room}:queue`, JSON.stringify([]))
+
     room_to_creds[room] = {access_token: access_token, refresh_token: refresh_token}
     if (!(room in room_to_queue)) {
       room_to_queue[room] = {currently_playing: {}, queue: []}
@@ -28,7 +36,7 @@ io.on('connection', function (socket) {
     const req = {
         url: 'https://api.spotify.com/v1/me',
         headers: {
-          'Authorization': 'Bearer ' + room_to_creds[room]["access_token"],
+          'Authorization': 'Bearer ' + access_token,
         },
         json: true
       }
@@ -36,6 +44,7 @@ io.on('connection', function (socket) {
         if(error) {
           console.log("error getting user " + response.statusCode + " " + error);
         } else {
+          redis.set(`${room}:owner`, JSON.stringify({ id: body.id, name: body.display_name }))
           room_to_queue[room].owner = { id: body.id, name: body.display_name };
           console.log(room_to_queue[room].owner)
         }
@@ -43,12 +52,21 @@ io.on('connection', function (socket) {
   });
 
   socket.on('get rooms', function (message) {
-    socket.emit('all rooms', Object.keys(room_to_queue))
+    redis.smembers("rooms_set", function (err, result) {
+      if (err) {
+        console.error(err);
+        socket.emit('all rooms', []);
+      } else {
+        socket.emit('all rooms', result);
+      }
+    });
+    
   });
 
   socket.on('delete song', function (message) {
     room = message['room'];
     id = message['id'];
+    redis.get`${room}:queue`
 
     if (room in room_to_queue) {
       curr_queue = room_to_queue[room]["queue"]

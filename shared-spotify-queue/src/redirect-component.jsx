@@ -7,11 +7,12 @@ class RedirectComponent extends React.Component {
     const { access_key, refresh_key } = this.props.match.params
     localStorage.setItem('access_key', access_key);
     localStorage.setItem('refresh_key', refresh_key); 
+    const { room } = this.props.match.params
+    return this.props.history.push("/room/" + room);
   }
 
   render() {
-  	const { room } = this.props.match.params
-  	return (<Redirect to={"/room/" + room} />);
+  	return null;
   }
 }
 
