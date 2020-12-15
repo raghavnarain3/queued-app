@@ -66,6 +66,9 @@ class Search extends React.Component {
     socket.on('users', data => {
       this.setState({ users: data })
     });
+    socket.on('q', data => {
+      this.setState({ selectedOptions: data.queue, currentSong: data.currently_playing });
+    });
     socket.on('queue', data => {
       this.setState({ selectedOptions: data["queue"], currentSong: data["currently_playing"] || {}, owner: data.owner });
     });
@@ -311,7 +314,10 @@ class Search extends React.Component {
     return user.id === owner.id || user.id === "1292289339";
   }
 
-  vote = (id, count) => {
+  vote = (id, count, double) => {
+    if(double) {
+      count = count * 2;
+    }
     const { room } = this.props.match.params
     const { socket, user } = this.state;
     var message = {room: room, id: id, count: count, user: user}
@@ -417,7 +423,7 @@ class Search extends React.Component {
                       </div>
                     })}
                   </div>
-                  <Button className={"vote-button"} variant="outline-success" disabled={ (modalSong.upvotes && this.getIndex(modalSong.upvotes, user.id) !== -1) } onClick={() => this.vote(modalSong.id, 1)}>Upvote <FontAwesomeIcon icon={faArrowUp} /></Button>
+                  <Button className={"vote-button"} variant="outline-success" disabled={ (modalSong.upvotes && this.getIndex(modalSong.upvotes, user.id) !== -1) } onClick={() => this.vote(modalSong.id, 1, this.getIndex(modalSong.downvotes, user.id) !== -1)}>Upvote <FontAwesomeIcon icon={faArrowUp} /></Button>
                 </div>
                 <div>
                   <div className="votes-list">
@@ -429,7 +435,7 @@ class Search extends React.Component {
                       </div>
                     })}
                   </div>
-                  <Button className={"vote-button"} variant="outline-danger" disabled={ (modalSong.downvotes && this.getIndex(modalSong.downvotes, user.id) !== -1) } onClick={() => this.vote(modalSong.id, -1)}>Downvote <FontAwesomeIcon icon={faArrowDown} /></Button>
+                  <Button className={"vote-button"} variant="outline-danger" disabled={ (modalSong.downvotes && this.getIndex(modalSong.downvotes, user.id) !== -1) } onClick={() => this.vote(modalSong.id, -1, this.getIndex(modalSong.upvotes, user.id) !== -1)}>Downvote <FontAwesomeIcon icon={faArrowDown} /></Button>
                 </div>
               </div>
               {this.isOwner() && (
