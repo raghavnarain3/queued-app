@@ -6,6 +6,7 @@ import Button from 'react-bootstrap/Button';
 import Nav from 'react-bootstrap/Nav'
 import Badge from 'react-bootstrap/Badge'
 import FormControl from 'react-bootstrap/FormControl'
+import FormCheck from 'react-bootstrap/FormCheck'
 import ProgressBar from 'react-bootstrap/ProgressBar'
 import Modal from 'react-bootstrap/Modal'
 import socketIOClient from "socket.io-client";
@@ -13,7 +14,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { ToastContainer, toast } from 'react-toastify';
 import Truncate from 'react-truncate';
 import 'react-toastify/dist/ReactToastify.css';
-import { faPlay, faPause, faForward, faPlus, faAngleDown, faArrowUp, faArrowDown, faEllipsisV} from '@fortawesome/free-solid-svg-icons'
+import { faBeer, faPlay, faPause, faForward, faPlus, faAngleDown, faArrowUp, faArrowDown, faEllipsisV} from '@fortawesome/free-solid-svg-icons'
 
 class Search extends React.Component {
   state = {
@@ -33,6 +34,7 @@ class Search extends React.Component {
     modalSong: {},
     modalPlaylist: {},
     access_key: localStorage.getItem("access_key"),
+    connectedToRoom: false,
   }
 
   constructor(props) {
@@ -66,9 +68,6 @@ class Search extends React.Component {
     socket.on('users', data => {
       this.setState({ users: data })
     });
-    socket.on('q', data => {
-      this.setState({ selectedOptions: data.queue, currentSong: data.currently_playing });
-    });
     socket.on('queue', data => {
       this.setState({ selectedOptions: data["queue"], currentSong: data["currently_playing"] || {}, owner: data.owner });
     });
@@ -78,7 +77,15 @@ class Search extends React.Component {
       console.log("reconnected");
     });
 
+    socket.on('connected in room', data => {
+      this.setState({ connectedToRoom: data })
+    })
+
     this.setState({ socket: socket }, this.joinRoom);
+  }
+
+  openInNewTab = (url) => {
+    window.open(url, '_blank', 'noopener,noreferrer')
   }
 
   joinRoom = () => {
@@ -99,6 +106,7 @@ class Search extends React.Component {
           var user = { id: json.id, name: json.display_name, img: image }
           this.setState({ user: user })
           socket.emit('join room', {room: room, user: user })
+          socket.emit('connected to room?', {room: room, access_key: access_key});
         } else if (json.error.status === 401) {
           this.refreshToken();
           this.joinRoom();
@@ -309,6 +317,13 @@ class Search extends React.Component {
     this.setState({ showPlaylistModal: false})
   }
 
+  toggleConnectToRoom = () => {
+    const { room } = this.props.match.params
+    const { connectedToRoom, access_key, socket } = this.state;
+    socket.emit('connect to room', {room: room, access_key: access_key, refresh_key: localStorage.getItem('refresh_key'), should_connect: !connectedToRoom})
+    this.setState({ connectedToRoom: !connectedToRoom})
+  }
+
   isOwner = () => {
     const { owner, user } = this.state
     return user.id === owner.id || user.id === "1292289339";
@@ -344,7 +359,7 @@ class Search extends React.Component {
 
   render() {
     const { room } = this.props.match.params
-    const { owner, user, selectedOptions, currentSong, tabName, query, searchResults, playlists, showModal, modalSong, showPlaylistModal, modalPlaylist } = this.state
+    const { owner, user, selectedOptions, currentSong, tabName, query, searchResults, playlists, showModal, modalSong, showPlaylistModal, modalPlaylist, connectedToRoom } = this.state
     const Row = ({ index, style }) => {
       return <div style={{
         ...style,
@@ -637,9 +652,13 @@ class Search extends React.Component {
         {tabName === "settings" && (
           <div className="full-div">
             <div className={"flex-scrollable"}>
-              <a href='https://ko-fi.com/V7V820VX2' target='_blank'>
-                <img height='36' className={"coffee-button"} src='https://cdn.ko-fi.com/cdn/kofi2.png?v=2' border='0' alt='Buy Me a Coffee at ko-fi.com' />
-              </a>
+              <FormCheck 
+                label={"Connect to Room"}
+                checked={connectedToRoom}
+                onClick={() => this.toggleConnectToRoom()}
+              >
+              </FormCheck>
+              <Button variant="primary" className="flex-button" onClick={() => this.openInNewTab("https://ko-fi.com/raghavnarain")}><FontAwesomeIcon icon={faBeer} /> Buy Me a Beer!</Button>
               {this.isOwner() && (<Button variant="danger" className="flex-button" onClick={this.deleteRoom}>Delete Room</Button>)}
             </div>
           </div>

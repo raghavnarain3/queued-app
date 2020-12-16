@@ -8,9 +8,7 @@ const ULID = require('ulid')
 const Redis = require("ioredis");
 const redis = new Redis();
 
-room_to_creds = {}
 room_to_queue = {}
-
 socket_to_user = {}
 
 function sendQueue(room) {
@@ -24,6 +22,7 @@ function sendQueue(room) {
     }
 
     multi.hgetall(`${room}:current_song`)
+    multi.hgetall(`${room}:owner`)
 
     multi.exec(function(err, results) {
       queue = []
@@ -38,16 +37,34 @@ function sendQueue(room) {
         }
       }
 
-      current_song = results[results.length - 1][1]
-      console.log(current_song.user)
+      current_song = results[results.length - 2][1]
+      owner = results[results.length - 1][1]
       if (current_song.user) {
         current_song.user = JSON.parse(current_song.user)
         current_song.is_playing = current_song.is_playing === "true"
       }
-      io.in(room).emit('q', {currently_playing: current_song, queue: queue});
+      io.in(room).emit('queue', {currently_playing: current_song, queue: queue, owner: owner});
     });
   })
     
+}
+
+function updateSongForEveryone(room, track) {
+  redis.smembers(`${room}:shared-listen`, function(err, results) {
+    for(token of results) {
+      const new_song_req = {
+        url: 'https://api.spotify.com/v1/me/player/play',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+        },
+        json: {
+          "uris": [track]
+        },
+      }
+      console.log("PLAYING TRACK")
+      request.put(new_song_req, function(error, response, body) {})
+    }
+  });
 }
 
 io.on('connection', function (socket) {
@@ -63,11 +80,6 @@ io.on('connection', function (socket) {
     redis.set(`${room}:access_token`, access_token)
     redis.set(`${room}:refresh_token`, refresh_token)
 
-    room_to_creds[room] = {access_token: access_token, refresh_token: refresh_token}
-    if (!(room in room_to_queue)) {
-      room_to_queue[room] = {currently_playing: {}, queue: []}
-    }
-
     const req = {
         url: 'https://api.spotify.com/v1/me',
         headers: {
@@ -79,9 +91,7 @@ io.on('connection', function (socket) {
         if(error) {
           console.log("error getting user " + response.statusCode + " " + error);
         } else {
-          redis.set(`${room}:owner`, JSON.stringify({ id: body.id, name: body.display_name }))
-          room_to_queue[room].owner = { id: body.id, name: body.display_name };
-          console.log(room_to_queue[room].owner)
+          redis.hset(`${room}:owner`, { id: body.id, name: body.display_name });
         }
       })
   });
@@ -110,14 +120,6 @@ io.on('connection', function (socket) {
       .exec(function(err, results) {
         sendQueue(room)
       });
-
-    if (room in room_to_queue) {
-      curr_queue = room_to_queue[room]["queue"]
-      room_to_queue[room]["queue"] = curr_queue.filter(function( obj ) {
-        return obj.id !== id;
-      });
-      //io.in(room).emit('queue', room_to_queue[room]);
-    }
   });
 
 
@@ -138,51 +140,6 @@ io.on('connection', function (socket) {
     multi.exec(function(err, result) {
       sendQueue(room);
     })
-
-
-    if (room in room_to_queue) {
-      obj = room_to_queue[room]["queue"].find(item => item.id === id);
-      if(obj) {
-
-        var upvoteIndex = -1;
-        for(var i = 0; i < obj.upvotes.length; i++) {
-          if(obj.upvotes[i].id === user.id) {
-            upvoteIndex = i;
-          }
-        }
-
-        var downvoteIndex = -1;
-        for(var i = 0; i < obj.downvotes.length; i++) {
-          if(obj.downvotes[i].id === user.id) {
-            downvoteIndex = i;
-          }
-        }
-
-        if(count > 0) {
-          if (upvoteIndex === -1) {
-            obj.upvotes.push(user)
-          }
-          if (downvoteIndex > -1) {
-            obj.downvotes.splice(downvoteIndex, 1);
-          }
-        } else {
-          if (downvoteIndex === -1) {
-            obj.downvotes.push(user);
-          }
-          if (upvoteIndex > -1) {
-            obj.upvotes.splice(upvoteIndex, 1);
-          }
-        }
-        room_to_queue[room]["queue"].sort(function (a,b) {
-          var vote_for_a = a.upvotes.length - a.downvotes.length
-          var vote_for_b = b.upvotes.length - b.downvotes.length
-          if (vote_for_a > vote_for_b) return -1;
-          if (vote_for_a < vote_for_b) return 1;
-          return 0;
-        });
-        //io.in(room).emit('queue', room_to_queue[room]);
-      }
-    }
   });
 
   socket.on('join room', function (message) {
@@ -196,13 +153,8 @@ io.on('connection', function (socket) {
     socket_to_user[room][socket.id] = user;
     socket.join(room, () => {
       io.in(room).emit('users', socket_to_user[room]);
+      sendQueue(room)
     });
-
-    if (room in room_to_queue) {
-      io.in(room).emit('queue', room_to_queue[room]);
-    } else {
-      console.log("room " + room + " doesn't exist")
-    }
   });
 
   socket.on('add', function (message) {
@@ -251,17 +203,11 @@ io.on('connection', function (socket) {
         }
       }
     );
-
-    if (room in room_to_queue) {
-      room_to_queue[room]["queue"].push(selectedOption);
-      //io.in(room).emit('queue', room_to_queue[room]);
-    }
   });
 
   socket.on('delete room', function (message) {
     room = message["room"]
-    delete room_to_queue[room]
-    delete room_to_creds[room]
+
     console.log("deleted room " + room);
     redis.srem('rooms_set', room)
     redis.del(`${room}:access_token`)
@@ -315,13 +261,6 @@ io.on('connection', function (socket) {
   socket.on('next', function (message) {
     room = message["room"]
     redis.set(`${room}:next`, true);
-
-    if (room in room_to_queue) {
-      queue = room_to_queue[room]["queue"]
-      if (queue.length > 0 && room_to_queue[room]["currently_playing"] != undefined) {
-        room_to_queue[room]["currently_playing"]["next"] = true
-      }
-    }
   })
 
   socket.on('disconnecting', function () {
@@ -338,6 +277,31 @@ io.on('connection', function (socket) {
 
   socket.on('disconnect', function () {
     console.log('user disconnected');
+  });
+
+  socket.on('connected to room?', function(message) {
+    room = message.room
+    key = message.access_key
+
+    redis.sismember(`${room}:shared-listen`, key, function(err, result) {
+      if(result) {
+        socket.emit('connected in room', true)
+      } else {
+        socket.emit('connected in room', false)
+      }
+    }) 
+  });
+
+  socket.on('connect to room', function(message) {
+    room = message.room
+    key = message.access_key
+    should_connect = message.should_connect
+
+    if (should_connect) {
+      redis.sadd(`${room}:shared-listen`, key)
+    } else {
+      redis.srem(`${room}:shared-listen`, key)
+    }
   });
 });
 
@@ -388,7 +352,6 @@ setInterval(() => {
                     current_song.is_playing = is_playing
 
                     redis.hmset(`${room}:current_song`, 'progress', progress, 'is_playing', is_playing, function(err, r) {
-                      console.log("BBBBBBBBBBBBBBBBBBBB");
                       sendQueue(room)
                     });
 
@@ -415,11 +378,12 @@ setInterval(() => {
                               },
                             }
 
+                            console.log("HMMMMMMM")
+                            updateSongForEveryone(room, next_track.uri);
                             request.put(new_song_req, function(error, response, body) {
                               try {
                                 if (!error && response.statusCode === 204) {
                                   redis.hset(`${room}:current_song`, next_track, function(err, r) {
-                                    console.log("ZZZZZZZZZZZZZZZ");
                                     sendQueue(room)
                                   });
                                 }
@@ -432,7 +396,7 @@ setInterval(() => {
                       })
                     }
                   } else {
-                    console.log("SPOTIFY ERROR " + response.statusCode)
+                    console.log("SPOTIFY ERROR " + error)
                     var client_id = process.env.ROOM_CLIENT_ID
                     var client_secret = process.env.ROOM_CLIENT_SECRET
                     var authOptions = {
@@ -455,8 +419,6 @@ setInterval(() => {
                     });
                   }
                 });
-                console.log(current_song);
-                console.log(queue);
               }
             });
         }
@@ -466,100 +428,3 @@ setInterval(() => {
     console.log("error from setInterval " + err)
   }
 }, 1500)
-
-// setInterval(() => {
-//   try {
-//     for (const room in room_to_queue) {
-//       if (room_to_queue[room]["queue"] !== undefined && (room_to_queue[room]["queue"].length > 0 || (room_to_queue[room]["currently_playing"] != undefined && room_to_queue[room]["currently_playing"]["progress"] != -1))) {
-//         const req = {
-//           url: 'https://api.spotify.com/v1/me/player/currently-playing',
-//           headers: {
-//             'Authorization': 'Bearer ' + room_to_creds[room]["access_token"],
-//           },
-//           json: true
-//         }
-//         request.get(req, function(error, response, body) {
-//           try {
-//             if (!error && (response.statusCode == 200 || response.statusCode == 204)) {
-//               if(body === undefined) {
-//                 currently_playing_song = null;
-//                 progress = -1;
-//                 is_playing = false;
-//               } else {
-//                 currently_playing_song = body["item"]["uri"];
-//                 progress = body["progress_ms"];
-//                 is_playing = body["is_playing"];
-//               }
-//               is_not_playing = (is_playing === false && progress === 0)
-//               if (room_to_queue[room]["currently_playing"] != undefined) {
-//                 room_to_queue[room]["currently_playing"]["progress"] = progress
-//                 room_to_queue[room]["currently_playing"]["is_playing"] = is_playing
-//               }
-//               //io.in(room).emit('queue', room_to_queue[room])
-//               if (room_to_queue[room]["queue"].length > 0 && (is_not_playing || (room_to_queue[room]["currently_playing"] && (currently_playing_song != null && currently_playing_song !== room_to_queue[room]["currently_playing"]["uri"])) || (room_to_queue[room]["currently_playing"] && room_to_queue[room]["currently_playing"]["next"]))) {
-//                 next_track = room_to_queue[room]["queue"].shift()
-//                 if(next_track) {
-//                   const new_song_req = {
-//                     url: 'https://api.spotify.com/v1/me/player/play',
-//                     headers: {
-//                       'Authorization': 'Bearer ' + room_to_creds[room]["access_token"],
-//                     },
-//                     json: {
-//                       "uris": [next_track["uri"]]
-//                     },
-//                   }
-
-//                   request.put(new_song_req, function(error, response, body) {
-//                     try {
-//                       if (!error && response.statusCode === 204) {
-//                         if (room in room_to_queue) {
-//                           room_to_queue[room]["currently_playing"] = next_track
-//                           //io.in(room).emit('queue', room_to_queue[room]);
-//                         }
-//                       }
-//                       console.log(response.statusCode)
-//                     } catch (err) {
-//                       console.log("error from play next " + err)
-//                     }
-//                   })
-//                 }
-//               }
-//             } else {
-//               console.log(response.statusCode)
-//               var client_id = process.env.ROOM_CLIENT_ID
-//               var client_secret = process.env.ROOM_CLIENT_SECRET
-//               var authOptions = {
-//                 url: 'https://accounts.spotify.com/api/token',
-//                 form: {
-//                   grant_type: 'refresh_token',
-//                   refresh_token: room_to_creds[room].refresh_token,
-
-//                 },
-//                 headers: {
-//                   'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64'))
-//                 },
-//                 json: true
-//               }
-
-//               request.post(authOptions, function(error, response, body) {
-//                 if (!error && response.statusCode === 200) {
-//                   console.log(body.access_token)
-//                   room_to_creds[room].access_token = body.access_token
-//                 }
-//               })
-//             }
-//           } catch (err) {
-//             console.log("error from current song " + err)
-//           }
-//         })
-//       } else {
-//         console.log("not using creds for room " + room)
-//         console.log("currently playing from queue" + room_to_queue[room]["currently_playing"])
-//         console.log("currently playing on spotify " + currently_playing_song)
-
-//       }
-//     } 
-//   } catch (err) {
-//     console.log("error from setInterval " + err)
-//   };
-// }, 1500)
