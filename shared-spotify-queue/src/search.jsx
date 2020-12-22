@@ -33,14 +33,14 @@ class Search extends React.Component {
     showPlaylistModal: false,
     modalSong: {},
     modalPlaylist: {},
-    access_key: localStorage.getItem("access_key"),
+    access_key: localStorage.getItem("ak"),
     connectedToRoom: false,
   }
 
   constructor(props) {
     super(props)
     this.textInput = React.createRef();
-    if(localStorage.getItem("access_key") === null || localStorage.getItem("refresh_key") == null) {
+    if(localStorage.getItem("ak") === null || localStorage.getItem("rk") == null) {
       const url = process.env.REACT_APP_BACKEND_URL + "/login?room=" + this.props.match.params.room;
       window.location.assign(url);
     }
@@ -129,11 +129,11 @@ class Search extends React.Component {
         'Authorization': 'Basic ' + btoa(`${client_id}:${client_secret}`),
         'Content-Type':'application/x-www-form-urlencoded',
       },
-      body: `grant_type=refresh_token&refresh_token=${localStorage.getItem('refresh_key')}`,
+      body: `grant_type=refresh_token&refresh_token=${localStorage.getItem('rk')}`,
     })
       .then(response => response.json())
       .then(json => {
-        localStorage.setItem("access_key", json.access_token);
+        localStorage.setItem("ak", json.access_token);
         this.setState({ access_key: json.access_token })
         if (connectedToRoom) {
           socket.emit('update connected room', { room: room, new_token: json.access_token, user_id: user.id })
@@ -326,7 +326,7 @@ class Search extends React.Component {
   toggleConnectToRoom = () => {
     const { room } = this.props.match.params
     const { connectedToRoom, access_key, socket, user } = this.state;
-    socket.emit('connect to room', {room: room, user_id: user.id, access_key: access_key, refresh_key: localStorage.getItem('refresh_key'), should_connect: !connectedToRoom})
+    socket.emit('connect to room', {room: room, user_id: user.id, access_key: access_key, refresh_key: localStorage.getItem('rk'), should_connect: !connectedToRoom})
     this.setState({ connectedToRoom: !connectedToRoom})
   }
 
