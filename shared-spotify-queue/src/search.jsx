@@ -13,6 +13,7 @@ import socketIOClient from "socket.io-client";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { ToastContainer, toast } from 'react-toastify';
 import Truncate from 'react-truncate';
+import copy from 'copy-to-clipboard';
 import 'react-toastify/dist/ReactToastify.css';
 import { faBeer, faPlay, faPause, faForward, faPlus, faAngleDown, faArrowUp, faArrowDown, faEllipsisV, faCopy } from '@fortawesome/free-solid-svg-icons'
 
@@ -366,7 +367,7 @@ class Search extends React.Component {
   copyText = () => {
     const { room } = this.props.match.params
 
-    navigator.clipboard.writeText(`http://cueued.com/room/${room}`)
+    copy(`http://cueued.com/room/${room}`)
     toast.info("Copied shareable url");
   }
 
