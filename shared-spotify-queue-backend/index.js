@@ -468,7 +468,7 @@ setInterval(() => {
                     }
                   } else {
                     console.log("SPOTIFY ERROR " + error)
-                    console.log(response.statusCode);
+                    console.log(response)
                     var client_id = process.env.ROOM_CLIENT_ID
                     var client_secret = process.env.ROOM_CLIENT_SECRET
                     var authOptions = {
