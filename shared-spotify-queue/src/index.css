@@ -398,3 +398,35 @@ button.close {
   margin-bottom: 5px;
   float: right;
 }
+
+.shareable-link {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.shareable-link-input {
+  width: 70%;
+  margin-right: 5px;
+}
+
+input[type=checkbox]
+{
+  /* Double-sized Checkboxes */
+  -ms-transform: scale(2); /* IE */
+  -moz-transform: scale(2); /* FF */
+  -webkit-transform: scale(2); /* Safari and Chrome */
+  -o-transform: scale(2); /* Opera */
+  padding: 10px;
+}
+
+.connect-to-room-check {
+  margin-bottom: 30px;
+  margin-top: 10px;
+}
+
+.form-check-label {
+  margin-left: 10px;
+}

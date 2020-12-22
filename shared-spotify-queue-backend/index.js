@@ -49,20 +49,55 @@ function sendQueue(room) {
     
 }
 
+function playSongForConnectedUser(room, track, user_id, progress_ms = "0") {
+  redis.hgetall(`${room}:connected-user:${user_id}`, function(error1, result) {
+    access_key = result.access_key
+    refresh_key = result.refresh_key
+
+    const new_song_req = {
+      url: 'https://api.spotify.com/v1/me/player/play',
+      headers: {
+        'Authorization': 'Bearer ' + access_key,
+      },
+      json: {
+        "uris": [track],
+        "position_ms": parseInt(progress_ms)
+      },
+    }
+    request.put(new_song_req, function(error2, response, body) {
+      if (error2 || (response.statusCode != 200 && response.statusCode != 204)) {
+        console.log("error2 " + error2)
+        console.log(response.statusCode)
+        var client_id = process.env.CLIENT_ID
+        var client_secret = process.env.CLIENT_SECRET
+        var authOptions = {
+          url: 'https://accounts.spotify.com/api/token',
+          form: {
+            grant_type: 'refresh_token',
+            refresh_token: refresh_key,
+
+          },
+          headers: {
+            'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64'))
+          },
+          json: true
+        }
+        request.post(authOptions, function(error3, response2, body) {
+          if (!error3 && response2.statusCode === 200) {
+            redis.hset(`${room}:connected-user:${user_id}`, "access_key", function(error4, r) {
+              playSongForConnectedUser(room, track, user_id)
+            })
+          }
+        });
+      }
+    })
+  })
+}
+
 function updateSongForEveryone(room, track) {
   redis.smembers(`${room}:shared-listen`, function(err, results) {
-    for(token of results) {
-      const new_song_req = {
-        url: 'https://api.spotify.com/v1/me/player/play',
-        headers: {
-          'Authorization': 'Bearer ' + token,
-        },
-        json: {
-          "uris": [track]
-        },
-      }
-      console.log("PLAYING TRACK")
-      request.put(new_song_req, function(error, response, body) {})
+    for(user_id of results) {
+      playSongForConnectedUser(room, track, user_id)
     }
   });
 }
@@ -209,12 +244,32 @@ io.on('connection', function (socket) {
     room = message["room"]
 
     console.log("deleted room " + room);
-    redis.srem('rooms_set', room)
-    redis.del(`${room}:access_token`)
-    redis.del(`${room}:refresh_token`)
-    redis.del(`${room}:current_song`)
-    redis.del(`${room}:queue`)
-    redis.del(`${room}:owner`)
+    multi = redis.multi()
+    multi.srem('rooms_set', room)
+    multi.del(`${room}:access_token`)
+    multi.del(`${room}:refresh_token`)
+    multi.del(`${room}:current_song`)
+    multi.del(`${room}:owner`)
+    multi.exec()
+    redis.smembers(`${room}:shared-listen`, function(err, results) {
+      for(user_id of results) {
+        multi.del(`${room}:connected-user:${user_id}`)
+      }
+
+      multi.del(`${room}:shared-listen`)
+
+      redis.zrange(`${room}:queue`, 0, -1, function (error, result) {
+        for(id of result) {
+          multi.del(`${room}:queue:song:${id}`)
+          multi.del(`${room}:queue:song:${id}:upvotes`)
+          multi.del(`${room}:queue:song:${id}:downvotes`)
+        }
+
+        multi.del(`${room}:queue`)
+        multi.exec()
+      });
+    });
+
     io.in(room).emit('queue', {currently_playing: {}, queue: []});
   });
 
@@ -282,8 +337,9 @@ io.on('connection', function (socket) {
   socket.on('connected to room?', function(message) {
     room = message.room
     key = message.access_key
+    user_id = message.user_id
 
-    redis.sismember(`${room}:shared-listen`, key, function(err, result) {
+    redis.sismember(`${room}:shared-listen`, user_id, function(err, result) {
       if(result) {
         socket.emit('connected in room', true)
       } else {
@@ -294,15 +350,31 @@ io.on('connection', function (socket) {
 
   socket.on('connect to room', function(message) {
     room = message.room
+    user_id = message.user_id
     key = message.access_key
     should_connect = message.should_connect
 
     if (should_connect) {
-      redis.sadd(`${room}:shared-listen`, key)
+      user_keys = { "access_key": message.access_key, "refresh_key": message.refresh_key }
+      redis.multi().sadd(`${room}:shared-listen`, user_id).hset(`${room}:connected-user:${user_id}`, user_keys).exec(function(err, result) {
+        redis.hgetall(`${room}:current_song`, function(error, current_song) {
+          if(current_song) {
+            playSongForConnectedUser(room, current_song.uri, user_id, current_song.progress)
+          }
+        })
+      })
     } else {
-      redis.srem(`${room}:shared-listen`, key)
+      redis.multi().srem(`${room}:shared-listen`, user_id).del(`${room}:connected-user:${user_id}`).exec()
     }
   });
+
+  socket.on('update connected room', function(message) {
+    room = message.room
+    user_id = message.user_id
+    new_token = message.new_token
+
+    redis.hset(`${room}:connected-user:${user_id}`, "access_key", new_token)
+  })
 });
 
 setInterval(() => {
@@ -339,6 +411,7 @@ setInterval(() => {
                 request.get(req, function(error, response, body) {
                   if (!error && (response.statusCode == 200 || response.statusCode == 204)) {
                     if(body === undefined) {
+                      console.log("no device")
                       currently_playing_song = null;
                       progress = -1;
                       is_playing = false;
@@ -351,7 +424,7 @@ setInterval(() => {
                     current_song.progress = progress
                     current_song.is_playing = is_playing
 
-                    redis.hmset(`${room}:current_song`, 'progress', progress, 'is_playing', is_playing, function(err, r) {
+                    redis.hset(`${room}:current_song`, 'progress', progress, 'is_playing', is_playing, function(err, r) {
                       sendQueue(room)
                     });
 
@@ -377,8 +450,6 @@ setInterval(() => {
                                 "uris": [next_track.uri]
                               },
                             }
-
-                            console.log("HMMMMMMM")
                             updateSongForEveryone(room, next_track.uri);
                             request.put(new_song_req, function(error, response, body) {
                               try {
@@ -397,6 +468,7 @@ setInterval(() => {
                     }
                   } else {
                     console.log("SPOTIFY ERROR " + error)
+                    console.log(response.statusCode);
                     var client_id = process.env.ROOM_CLIENT_ID
                     var client_secret = process.env.ROOM_CLIENT_SECRET
                     var authOptions = {

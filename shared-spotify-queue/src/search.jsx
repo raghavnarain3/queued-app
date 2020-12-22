@@ -14,7 +14,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { ToastContainer, toast } from 'react-toastify';
 import Truncate from 'react-truncate';
 import 'react-toastify/dist/ReactToastify.css';
-import { faBeer, faPlay, faPause, faForward, faPlus, faAngleDown, faArrowUp, faArrowDown, faEllipsisV} from '@fortawesome/free-solid-svg-icons'
+import { faBeer, faPlay, faPause, faForward, faPlus, faAngleDown, faArrowUp, faArrowDown, faEllipsisV, faCopy } from '@fortawesome/free-solid-svg-icons'
 
 class Search extends React.Component {
   state = {
@@ -89,7 +89,7 @@ class Search extends React.Component {
   }
 
   joinRoom = () => {
-    const { access_key, socket } = this.state
+    const { access_key, socket, user } = this.state
     const { room } = this.props.match.params
 
     fetch('https://api.spotify.com/v1/me', {
@@ -106,7 +106,7 @@ class Search extends React.Component {
           var user = { id: json.id, name: json.display_name, img: image }
           this.setState({ user: user })
           socket.emit('join room', {room: room, user: user })
-          socket.emit('connected to room?', {room: room, access_key: access_key});
+          socket.emit('connected to room?', { room: room, access_key: access_key, user_id: user.id });
         } else if (json.error.status === 401) {
           this.refreshToken();
           this.joinRoom();
@@ -117,6 +117,9 @@ class Search extends React.Component {
   }
 
   refreshToken = () => {
+    const { connectedToRoom, socket, access_key, user } = this.state
+    const { room } = this.props.match.params
+
     const client_id = process.env.REACT_APP_CLIENT_ID
     const client_secret = process.env.REACT_APP_CLIENT_SECRET
 
@@ -132,6 +135,9 @@ class Search extends React.Component {
       .then(json => {
         localStorage.setItem("access_key", json.access_token);
         this.setState({ access_key: json.access_token })
+        if (connectedToRoom) {
+          socket.emit('update connected room', { room: room, new_token: json.access_token, user_id: user.id })
+        }
       })
 
   }
@@ -319,8 +325,8 @@ class Search extends React.Component {
 
   toggleConnectToRoom = () => {
     const { room } = this.props.match.params
-    const { connectedToRoom, access_key, socket } = this.state;
-    socket.emit('connect to room', {room: room, access_key: access_key, refresh_key: localStorage.getItem('refresh_key'), should_connect: !connectedToRoom})
+    const { connectedToRoom, access_key, socket, user } = this.state;
+    socket.emit('connect to room', {room: room, user_id: user.id, access_key: access_key, refresh_key: localStorage.getItem('refresh_key'), should_connect: !connectedToRoom})
     this.setState({ connectedToRoom: !connectedToRoom})
   }
 
@@ -355,6 +361,13 @@ class Search extends React.Component {
     }
 
     return "/empty_user.png"
+  }
+
+  copyText = () => {
+    const { room } = this.props.match.params
+
+    navigator.clipboard.writeText(`http://cueued.com/room/${room}`)
+    toast.info("Copied shareable url");
   }
 
   render() {
@@ -453,7 +466,7 @@ class Search extends React.Component {
                   <Button className={"vote-button"} variant="outline-danger" disabled={ (modalSong.downvotes && this.getIndex(modalSong.downvotes, user.id) !== -1) } onClick={() => this.vote(modalSong.id, -1, this.getIndex(modalSong.upvotes, user.id) !== -1)}>Downvote <FontAwesomeIcon icon={faArrowDown} /></Button>
                 </div>
               </div>
-              {this.isOwner() && (
+              {(this.isOwner() || (modalSong.user && modalSong.user.id === user.id)) && (
                 <div>
                   <div className="votes-list"></div>
                   <Button variant="danger" onClick={() => this.remove(modalSong.id)}>Remove</Button>
@@ -652,13 +665,18 @@ class Search extends React.Component {
         {tabName === "settings" && (
           <div className="full-div">
             <div className={"flex-scrollable"}>
+              <div className="shareable-link">
+                <FormControl className="shareable-link-input" readOnly defaultValue={`http://cueued.com/room/${room}`}></FormControl>
+                <Button onClick={() => this.copyText()}><FontAwesomeIcon icon={faCopy} /></Button>
+              </div>
               <FormCheck 
+                className="connect-to-room-check"
                 label={"Connect to Room"}
                 checked={connectedToRoom}
                 onClick={() => this.toggleConnectToRoom()}
               >
               </FormCheck>
-              <Button variant="primary" className="flex-button" onClick={() => this.openInNewTab("https://ko-fi.com/raghavnarain")}><FontAwesomeIcon icon={faBeer} /> Buy Me a Beer!</Button>
+              <Button variant="primary" className="flex-button" onClick={() => this.openInNewTab("http://paypal.me/raghavnarain3")}><FontAwesomeIcon icon={faBeer} /> Buy Me a Beer!</Button>
               {this.isOwner() && (<Button variant="danger" className="flex-button" onClick={this.deleteRoom}>Delete Room</Button>)}
             </div>
           </div>
