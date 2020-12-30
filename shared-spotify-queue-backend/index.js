@@ -218,7 +218,7 @@ io.on('connection', function (socket) {
       duration,
       'image',
       image,
-      'isPlaying',
+      'is_playing',
       isPlaying,
       'progress',
       progress,
@@ -384,115 +384,7 @@ setInterval(() => {
         console.error(err);
       } else {
         for(room of result) {
-          redis
-            .multi()
-            .get(`${room}:access_token`)
-            .get(`${room}:refresh_token`)
-            .hgetall(`${room}:current_song`)
-            .zrange(`${room}:queue`, 0, -1)
-            .get(`${room}:next`)
-            .del(`${room}:next`)
-            .exec(function(err, results) {
-              access_token = results[0][1]
-              refresh_token = results[1][1]
-              current_song = results[2][1]
-              queue = results[3][1]
-              next = results[4][1]
-
-              if(queue.length > 0 || current_song.progress != -1) {
-                const req = {
-                  url: 'https://api.spotify.com/v1/me/player/currently-playing',
-                  headers: {
-                    'Authorization': 'Bearer ' + access_token,
-                  },
-                  json: true
-                }
-
-                request.get(req, function(error, response, body) {
-                  if (!error && (response.statusCode == 200 || response.statusCode == 204)) {
-                    if(body === undefined) {
-                      console.log("no device")
-                      currently_playing_song = null;
-                      progress = -1;
-                      is_playing = false;
-                    } else {
-                      currently_playing_song = body.item.uri;
-                      progress = body.progress_ms;
-                      is_playing = body.is_playing;
-                    }
-                    is_not_playing = (is_playing === false && progress === 0)
-                    current_song.progress = progress
-                    current_song.is_playing = is_playing
-
-                    redis.hset(`${room}:current_song`, 'progress', progress, 'is_playing', is_playing, function(err, r) {
-                      sendQueue(room)
-                    });
-
-                    if(queue.length > 0 && (is_not_playing || (currently_playing_song != null && currently_playing_song != current_song.uri) || next)) {
-                      next_song_id = queue[0]
-                      redis
-                        .multi()
-                        .hgetall(`${room}:queue:song:${next_song_id}`)
-                        .zrem(`${room}:queue`, next_song_id)
-                        .del(`${room}:queue:song:${next_song_id}`)
-                        .del(`${room}:queue:song:${next_song_id}:upvotes`)
-                        .del(`${room}:queue:song:${next_song_id}:downvotes`)
-                        .exec(function(err, next_song_results) {
-                          next_track = next_song_results[0][1]
-
-                          if(next_track.uri) {
-                            const new_song_req = {
-                              url: 'https://api.spotify.com/v1/me/player/play',
-                              headers: {
-                                'Authorization': 'Bearer ' + access_token,
-                              },
-                              json: {
-                                "uris": [next_track.uri]
-                              },
-                            }
-                            updateSongForEveryone(room, next_track.uri);
-                            request.put(new_song_req, function(error, response, body) {
-                              try {
-                                if (!error && response.statusCode === 204) {
-                                  redis.hset(`${room}:current_song`, next_track, function(err, r) {
-                                    sendQueue(room)
-                                  });
-                                }
-                                console.log(response.statusCode)
-                              } catch (err) {
-                                console.log("error from play next " + err)
-                              }
-                            })
-                          }
-                      })
-                    }
-                  } else {
-                    console.log("SPOTIFY ERROR " + error)
-                    console.log(response)
-                    var client_id = process.env.ROOM_CLIENT_ID
-                    var client_secret = process.env.ROOM_CLIENT_SECRET
-                    var authOptions = {
-                      url: 'https://accounts.spotify.com/api/token',
-                      form: {
-                        grant_type: 'refresh_token',
-                        refresh_token: refresh_token,
-
-                      },
-                      headers: {
-                        'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64'))
-                      },
-                      json: true
-                    }
-
-                    request.post(authOptions, function(error, response, body) {
-                      if (!error && response.statusCode === 200) {
-                        redis.set(`${room}:access_token`, body.access_token)
-                      }
-                    });
-                  }
-                });
-              }
-            });
+          sendQueue(room)
         }
       } 
     });

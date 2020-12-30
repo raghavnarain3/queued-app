@@ -16,9 +16,15 @@ shared-spotify-queue/build
 shared-spotify-queue/.env
 shared-spotify-queue/.prod-env
 shared-spotify-queue/.dev-env
+
+song-player/.env
+song-player/.prod-env
+song-player/.dev-env
+
 server/.env
 server/.prod-env
 server/.dev-env
+
 shared-spotify-queue-backend/.env
 shared-spotify-queue-backend/.prod-env
 shared-spotify-queue-backend/.dev-env
