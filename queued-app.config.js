@@ -35,7 +35,7 @@ module.exports = {
     },
     {
       name: "queued-app-loop",
-      script: "go run main.go",
+      script: "go run ./song-player/main.go",
       watch: true,
       env: {
         "NODE_ENV": "development",
