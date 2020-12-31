@@ -677,7 +677,7 @@ class Search extends React.Component {
                 onClick={() => this.toggleConnectToRoom()}
               >
               </FormCheck>
-              <Button variant="primary" className="flex-button" onClick={() => this.openInNewTab("https://www.buymeacoffee.com/raghavnarain3")}><FontAwesomeIcon icon={faBeer} /> Buy Me a Beer!</Button>
+              <Button variant="primary" className="flex-button" onClick={() => this.openInNewTab("intent://venmo.com/raghavnarain3#Intent;package=com.venmo;scheme=https;end")}><FontAwesomeIcon icon={faBeer} /> Buy Me a Beer!</Button>
               {this.isOwner() && (<Button variant="danger" className="flex-button" onClick={this.deleteRoom}>Delete Room</Button>)}
             </div>
           </div>
