@@ -123,7 +123,7 @@ io.on('connection', function (socket) {
         json: true
       }
       request.get(req, function(error, response, body) {
-        if(error) {
+        if(error || response.statusCode >= 300) {
           console.log("error getting user " + response.statusCode + " " + error);
         } else {
           console.log("setting owner " + body.display_name + " " + room)
