@@ -238,9 +238,21 @@ func updateRoom(room string) {
 
 	defer conn.Close()
 
+	_, lock_err := redis.String(conn.Do("SET", room+":lock", true, "EX", 5, "NX"))
+	if lock_err == redis.ErrNil {
+		log.Println(room+" locked")
+		redis.String(conn.Do("DEL", room+":lock"))
+		return
+	} else if lock_err != nil {
+		log.Println(lock_err)
+		redis.String(conn.Do("DEL", room+":lock"))
+		return
+	}
+
 	err := conn.Send("MULTI")
 	if err != nil {
 		log.Println(err)
+		redis.String(conn.Do("DEL", room+":lock"))
 		return
 	}
 	err = conn.Send("GET", room+":access_token")
@@ -271,9 +283,11 @@ func updateRoom(room string) {
 	replies, err := redis.Values(conn.Do("EXEC"))
 	if err == redis.ErrNil {
 		log.Println("trying again")
+		redis.String(conn.Do("DEL", room+":lock"))
 		return
 	} else if err != nil {
 		log.Println(err)
+		redis.String(conn.Do("DEL", room+":lock"))
 		return
 	}
 
@@ -314,6 +328,7 @@ func updateRoom(room string) {
     resp, err := http.DefaultClient.Do(req)
     if err != nil {
       log.Println(err)
+      redis.String(conn.Do("DEL", room+":lock"))
       return
     }
     defer resp.Body.Close()
@@ -348,6 +363,7 @@ func updateRoom(room string) {
 					err := conn.Send("MULTI")
 					if err != nil {
 						log.Println(err)
+						redis.String(conn.Do("DEL", room+":lock"))
 						return
 					}
 					err = conn.Send("HGETALL", room+":queue:song:"+nextSongId)
@@ -383,7 +399,7 @@ func updateRoom(room string) {
 						log.Println(err)
 					}
 
-					fmt.Println("playing song")
+					log.Println("playing song")
 					fmt.Println(nextSong.Uri)
 					fmt.Println(nextSong.Value)
 					playNextTrack(access_token, refresh_token, room, nextSong, conn)
@@ -410,4 +426,5 @@ func updateRoom(room string) {
 	  	refreshAccessToken(room, access_token, refresh_token, conn)
 	  }
 	}
+	redis.String(conn.Do("DEL", room+":lock"))
 }

@@ -322,7 +322,9 @@ io.on('connection', function (socket) {
     var rooms = Object.keys(socket.rooms);
     rooms.forEach(function(room) {
       try {
-        delete socket_to_user[room][socket.id]
+        if(socket_to_user[room] && socket_to_user[room][socket.id]) {
+          delete socket_to_user[room][socket.id]
+        }
       } catch (err) {
         console.log(err);
       }
