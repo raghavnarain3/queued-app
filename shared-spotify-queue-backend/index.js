@@ -6,7 +6,7 @@ const request = require('request');
 require('dotenv').config({path: __dirname+'/.env'})
 const ULID = require('ulid')
 const Redis = require("ioredis");
-const redis = new Redis();
+const redis = new Redis({ showFriendlyErrorStack: true });
 
 room_to_queue = {}
 socket_to_user = {}
@@ -126,7 +126,11 @@ io.on('connection', function (socket) {
         if(error) {
           console.log("error getting user " + response.statusCode + " " + error);
         } else {
-          redis.hset(`${room}:owner`, { id: body.id, name: body.display_name });
+          console.log("setting owner " + body.display_name + " " + room)
+          redis.hset(`${room}:owner`, { id: body.id, name: body.display_name }, (err) => {
+            console.log(err)
+          });
+          console.log("done setting owner " + body.display_name)
         }
       })
   });
