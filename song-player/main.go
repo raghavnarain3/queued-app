@@ -121,7 +121,7 @@ func playNextTrack(access_token string, refresh_token string, room string, nextT
       var uri = data["item"].(map[string]interface{})["uri"];
       playingIncorrectSong = uri != nextTrack.Uri
       if playingIncorrectSong {
-        time.Sleep(2 * time.Second)
+        time.Sleep(1 * time.Second)
       }
     } else {
       playingIncorrectSong = false
