@@ -199,6 +199,10 @@ func spotifyRefreshRequest(clientId string, clientSecret string, refreshToken st
     if(len(body) != 0) {
 	    var v interface{}
 			json.Unmarshal(body, &v)
+			if v == nil {
+				log.Println("bug")
+				return ""
+			}
 			data := v.(map[string]interface{})
 
 			if accessToken, ok := data["access_token"].(string); ok {
@@ -340,7 +344,17 @@ func updateRoom(room string) {
 	    if(len(body) != 0) {
 		    var v interface{}
 				json.Unmarshal(body, &v)
+				if v == nil {
+					log.Println("can't get currently playing for")
+					log.Println(room)
+					return
+				}
 				data := v.(map[string]interface{})
+				if data == nil {
+					log.Println("can't get (data) currently playing for")
+					log.Println(room)
+					return
+				}
 				var uri = data["item"].(map[string]interface{})["uri"];
 				var progress = data["progress_ms"]
 				var playing = data["is_playing"]
