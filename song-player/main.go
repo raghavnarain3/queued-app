@@ -358,6 +358,11 @@ func updateRoom(room string) {
 				}
 
 				if(len(queue) > 0 && (is_not_playing || (uri != currentSong.Uri) || next == "true")) {
+					log.Println(len(queue))
+					log.Println(is_not_playing)
+					log.Println(uri)
+					log.Println(currentSong.Uri)
+					log.Println(next)
 					var nextSongId = queue[0]
 
 					err := conn.Send("MULTI")
