@@ -198,7 +198,10 @@ func spotifyRefreshRequest(clientId string, clientSecret string, refreshToken st
     }
     if(len(body) != 0) {
 	    var v interface{}
-			json.Unmarshal(body, &v)
+			if mar_err2 := json.Unmarshal(body, &v) mar_err2 != nil {
+        fmt.Println(mar_err2)
+        return ""
+			}
 			data := v.(map[string]interface{})
 
 			if accessToken, ok := data["access_token"].(string); ok {
@@ -339,7 +342,10 @@ func updateRoom(room string) {
 	    }
 	    if(len(body) != 0) {
 		    var v interface{}
-				json.Unmarshal(body, &v)
+				if mar_err1 := json.Unmarshal(body, &v); mar_err1 != nil {
+	        fmt.Println(mar_err1)
+	        return
+				}
 				data := v.(map[string]interface{})
 				var uri = data["item"].(map[string]interface{})["uri"];
 				var progress = data["progress_ms"]
