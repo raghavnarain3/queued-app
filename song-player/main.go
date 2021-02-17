@@ -164,6 +164,16 @@ func playSongForConnectedUser(room string, userId string, songUri string, redisC
   var statusCode = spotifyPlayRequest(connectedUser.AccessKey, songUri)
   fmt.Println("playing song for " + userId)
   fmt.Println(statusCode)
+  
+  if(statusCode == 404) {
+    log.Println("Cant find room for " + userId)
+    return
+  }
+
+  if(statusCode == 429) {
+    log.Println("Rate limit " + userId)
+    time.Sleep(1 * time.Second)
+  }
 
   if(statusCode != 200 && statusCode != 204) {
     var clientId = goDotEnvVariable("CLIENT_ID")

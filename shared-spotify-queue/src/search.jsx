@@ -670,13 +670,15 @@ class Search extends React.Component {
                 <FormControl className="shareable-link-input" readOnly defaultValue={`http://cueued.com/room/${room}`}></FormControl>
                 <Button onClick={() => this.copyText()}><FontAwesomeIcon icon={faCopy} /></Button>
               </div>
-              <FormCheck 
-                className="connect-to-room-check"
-                label={"Connect to Room"}
-                checked={connectedToRoom}
-                onClick={() => this.toggleConnectToRoom()}
-              >
-              </FormCheck>
+              {!this.isOwner() && (
+                <FormCheck 
+                  className="connect-to-room-check"
+                  label={"Connect to Room"}
+                  checked={connectedToRoom}
+                  onChange={() => this.toggleConnectToRoom()}
+                >
+                </FormCheck>
+              )}
               <Button variant="primary" className="flex-button" onClick={() => this.openInNewTab("https://www.buymeacoffee.com/raghavnarain3")}><FontAwesomeIcon icon={faBeer} /> Buy Me a Beer!</Button>
               {this.isOwner() && (<Button variant="danger" className="flex-button" onClick={this.deleteRoom}>Delete Room</Button>)}
             </div>
