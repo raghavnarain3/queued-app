@@ -310,7 +310,7 @@ io.on('connection', function (socket) {
         }
         request.put(req, function(error, response, body) {
           if(error || response.statusCode != 204) {
-            console.log("pause " + error);
+            console.log("play " + error + " " + response.statusCode);
           }
         });
       }

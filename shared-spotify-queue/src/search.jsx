@@ -527,9 +527,11 @@ class Search extends React.Component {
                     <div>-</div>
                   </div>
                   <div className={"controls"}>
-                    <span className={"play"} onClick={this.playOrPause}>
-                      <FontAwesomeIcon icon={currentSong["is_playing"] ? faPause : faPlay} />
-                    </span>
+                    {this.isOwner() && (
+                      <span className={"play"} onClick={this.playOrPause}>
+                        <FontAwesomeIcon icon={currentSong["is_playing"] ? faPause : faPlay} />
+                      </span>
+                    )}
                     {this.isOwner() && (
                       <span className={"control-fa"} onClick={this.nextSong}>
                         <FontAwesomeIcon icon={faForward} />
