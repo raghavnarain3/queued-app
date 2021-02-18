@@ -108,13 +108,13 @@ func playNextTrack(access_token string, refresh_token string, room string, nextT
   fmt.Println("playing song for main user")
   fmt.Println(statusCode)
 
-    if(statusCode == 404) {
-      log.Println("Cant find room for main user " + room)
-      return
-    }
+  if(statusCode == 404) {
+    log.Println("Cant find room for main user " + room)
+    return
+  }
 
   if(statusCode == 429) {
-    log.Println("Rate limit " + userId)
+    log.Println("Rate limit " + room)
     return
   }
 
