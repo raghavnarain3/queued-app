@@ -130,7 +130,7 @@ func playNextTrack(access_token string, refresh_token string, room string, nextT
     data := getCurrentlyPlaying(room, access_token)
     if data != nil {
       log.Println("data")
-      log.Println(data["item"])
+      log.Println(data)
       var uri = data["item"].(map[string]interface{})["uri"];
       playingIncorrectSong = uri != nextTrack.Uri
       if playingIncorrectSong {
