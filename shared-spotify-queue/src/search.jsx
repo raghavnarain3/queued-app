@@ -643,7 +643,7 @@ class Search extends React.Component {
         {tabName === "queue" && (
           <div className="full-div">
             <div className="flex-scrollable">
-              {currentSong["value"] != null && (
+              {currentSong["value"] == null && (
                 <div className={"flex-item-clickable"}>
                   <div className={"song-info"}>
                       <div className={"player-details"}>
