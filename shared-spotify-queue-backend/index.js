@@ -66,6 +66,7 @@ function playSongForConnectedUser(room, track, user_id, progress_ms = "0") {
     }
     request.put(new_song_req, function(error2, response, body) {
       if (response.statusCode == 404) {
+        console.log("not found " + user_id)
         return
       }
       if (error2 || (response.statusCode != 200 && response.statusCode != 204)) {
