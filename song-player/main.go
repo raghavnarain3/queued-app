@@ -125,15 +125,18 @@ func playNextTrack(access_token string, refresh_token string, room string, nextT
     }
   }
   playingIncorrectSong := true
+  log.Println("CHECKING SONG")
   for playingIncorrectSong {
     data := getCurrentlyPlaying(room, access_token)
     if data != nil {
       var uri = data["item"].(map[string]interface{})["uri"];
       playingIncorrectSong = uri != nextTrack.Uri
       if playingIncorrectSong {
+        log.Println("incorrect song")
         time.Sleep(1 * time.Second)
       }
     } else {
+      log.Println("DONE")
       playingIncorrectSong = false
     }
   }
@@ -458,8 +461,11 @@ func updateRoom(room string) {
         log.Println("playing song")
         fmt.Println(nextSong.Uri)
         fmt.Println(nextSong.Value)
+        log.Println("playing next track")
         playNextTrack(access_token, refresh_token, room, nextSong, conn)
+        log.Println("finished enxt track")
         playSongForConnectedUsers(room, nextSong.Uri, conn)
+        log.Println("finished connected")
         _, err = conn.Do(
           "HSET", room+":current_song", 
           "id", nextSong.Id,
