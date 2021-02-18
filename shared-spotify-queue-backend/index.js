@@ -65,6 +65,9 @@ function playSongForConnectedUser(room, track, user_id, progress_ms = "0") {
       },
     }
     request.put(new_song_req, function(error2, response, body) {
+      if (response.statusCode == 404) {
+        return
+      }
       if (error2 || (response.statusCode != 200 && response.statusCode != 204)) {
         console.log("error2 " + error2 + "response.StatusCode " + response.statusCode)
         console.log(response.statusCode)
@@ -203,7 +206,8 @@ io.on('connection', function (socket) {
     selectedOption.id = id;
     selectedOption.upvotes = [];
     selectedOption.downvotes = [];
-
+    console.log("added song " + room)
+    console.log(selectedOption)
     artist = selectedOption.artist
     duration = selectedOption.duration
     image = selectedOption.image
