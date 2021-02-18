@@ -129,8 +129,7 @@ func playNextTrack(access_token string, refresh_token string, room string, nextT
   for playingIncorrectSong {
     data := getCurrentlyPlaying(room, access_token)
     if data != nil {
-      log.Println("data")
-      log.Println(data)
+      log.Println("checking incorrect song")
       if (data["item"] != nil) {
         var uri = data["item"].(map[string]interface{})["uri"];
         playingIncorrectSong = uri != nextTrack.Uri
@@ -403,7 +402,7 @@ func updateRoom(room string) {
 
   if(len(queue) > 0 || currentSong.Progress != "-1") {
     data := getCurrentlyPlaying(room, access_token)
-    if data != nil {
+    if data != nil && data["item"] != nil {
       var uri = data["item"].(map[string]interface{})["uri"];
       var progress = data["progress_ms"]
       var playing = data["is_playing"]
