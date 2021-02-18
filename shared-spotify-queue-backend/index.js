@@ -65,11 +65,11 @@ function playSongForConnectedUser(room, track, user_id, progress_ms = "0") {
       },
     }
     request.put(new_song_req, function(error2, response, body) {
-      if (response.statusCode == 404 || response.statusCode == 400) {
-        console.log("not found " + user_id)
+      if (response.statusCode == 404 || response.statusCode == 400 || response.statusCode == 429) {
+        console.log("not found " + user_id + " " + response.statusCode)
         return
       }
-      if (error2 || (response.statusCode != 200 && response.statusCode != 204)) {
+      if (error2 || (response.statusCode == 401 || response.statusCode == 403)) {
         console.log("error2 " + error2 + "response.StatusCode " + response.statusCode)
         console.log(response.statusCode)
         var client_id = process.env.CLIENT_ID
