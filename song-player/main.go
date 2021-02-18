@@ -131,8 +131,10 @@ func playNextTrack(access_token string, refresh_token string, room string, nextT
     if data != nil {
       log.Println("data")
       log.Println(data)
-      var uri = data["item"].(map[string]interface{})["uri"];
-      playingIncorrectSong = uri != nextTrack.Uri
+      if (data["item"] != nil) {
+        var uri = data["item"].(map[string]interface{})["uri"];
+        playingIncorrectSong = uri != nextTrack.Uri
+      }
       if playingIncorrectSong {
         log.Println("incorrect song")
         time.Sleep(1 * time.Second)
@@ -282,7 +284,6 @@ func getCurrentlyPlaying(room string, accessToken string) (map[string]interface{
     return nil
   }
   defer resp.Body.Close()
-  log.Println("0")
   if(resp.StatusCode == 200 || resp.StatusCode == 204) {
     body, err := ioutil.ReadAll(resp.Body)
     if err != nil {
@@ -291,20 +292,17 @@ func getCurrentlyPlaying(room string, accessToken string) (map[string]interface{
     if(len(body) != 0) {
       var v interface{}
       json.Unmarshal(body, &v)
-      log.Println("1")
       if v == nil {
         log.Println("can't get currently playing for")
         log.Println(room)
         return nil
       }
-      log.Println("2")
       data := v.(map[string]interface{})
       if data == nil {
         log.Println("can't get (data) currently playing for")
         log.Println(room)
         return nil
       }
-      log.Println("3")
 
       return data
     }
