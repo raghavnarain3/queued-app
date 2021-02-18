@@ -643,6 +643,17 @@ class Search extends React.Component {
         {tabName === "queue" && (
           <div className="full-div">
             <div className="flex-scrollable">
+              {currentSong["value"] != null && (
+                <div className={"flex-item-clickable"}>
+                  <div className={"song-info"}>
+                      <div className={"player-details"}>
+                        <div>
+                          <div>Cueued can only start working when you start playing the spotify app on your device of choice!</div>
+                        </div>
+                      </div>
+                  </div>
+                </div>
+              )}
               {selectedOptions.map((value, index) => {
                 return <div key={index} className={"flex-item-clickable"} onClick={() => this.showModalOptions(value)}>
                   <img className={"album"} src={value["image"]}></img>
