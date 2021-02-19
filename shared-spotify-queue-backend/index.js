@@ -88,7 +88,7 @@ function playSongForConnectedUser(room, track, user_id, progress_ms = "0") {
         }
         request.post(authOptions, function(error3, response2, body) {
           if (!error3 && response2.statusCode === 200) {
-            redis.hset(`${room}:connected-user:${user_id}`, "access_key", function(error4, r) {
+            redis.hset(`${room}:connected-user:${user_id}`, "access_key", body.access_token, function(error4, r) {
               playSongForConnectedUser(room, track, user_id)
             })
           }
