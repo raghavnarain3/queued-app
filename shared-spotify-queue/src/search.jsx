@@ -650,7 +650,7 @@ class Search extends React.Component {
                   <div className={"song-info"}>
                       <div className={"player-details"}>
                         <div>
-                          <div>Cueued can only take over when you start playing the spotify app on your device of choice!</div>
+                          <div>Cueued can only take over if you have premium and when you start playing the spotify app on your device of choice!</div>
                         </div>
                       </div>
                   </div>
