@@ -129,6 +129,13 @@ io.on('connection', function (socket) {
       request.get(req, function(error, response, body) {
         if(error || response.statusCode >= 300) {
           console.log("error getting user " + response.statusCode + " " + error);
+          request.get(req, function(e, r, b) {
+            console.log("trying owner again")
+            console.log(r.statusCode)
+            redis.hset(`${room}:owner`, { id: b.id, name: b.display_name }, (err) => {
+              console.log(err)
+            });
+          }
         } else {
           console.log("setting owner " + body.display_name + " " + room)
           redis.hset(`${room}:owner`, { id: body.id, name: body.display_name }, (err) => {

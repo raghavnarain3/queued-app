@@ -643,16 +643,39 @@ class Search extends React.Component {
         {tabName === "queue" && (
           <div className="full-div">
             <div className="flex-scrollable">
-              {currentSong["value"] == null && (
+              {(selectedOptions.length == 0 || currentSong["value"] == null) && (
+                <>
                 <div className={"flex-item-clickable"}>
+                  <img className={"album"}></img>
                   <div className={"song-info"}>
                       <div className={"player-details"}>
                         <div>
-                          <div>Cueued can only start working when you start playing the spotify app on your device of choice!</div>
+                          <div>Cueued can only take over when you start playing the spotify app on your device of choice!</div>
                         </div>
                       </div>
                   </div>
                 </div>
+                <div className={"flex-item-clickable"}>
+                  <img className={"album"}></img>
+                  <div className={"song-info"}>
+                      <div className={"player-details"}>
+                        <div>
+                          <div>Make sure the "repeat" button is turned off on spotify</div>
+                        </div>
+                      </div>
+                  </div>
+                </div>
+                <div className={"flex-item-clickable"}>
+                  <img className={"album"}></img>
+                  <div className={"song-info"}>
+                      <div className={"player-details"}>
+                        <div>
+                          <div>Don't forget to clear the room when you're done with it!</div>
+                        </div>
+                      </div>
+                  </div>
+                </div>
+                </>
               )}
               {selectedOptions.map((value, index) => {
                 return <div key={index} className={"flex-item-clickable"} onClick={() => this.showModalOptions(value)}>
