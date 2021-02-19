@@ -135,7 +135,7 @@ io.on('connection', function (socket) {
             redis.hset(`${room}:owner`, { id: b.id, name: b.display_name }, (err) => {
               console.log(err)
             });
-          }
+          })
         } else {
           console.log("setting owner " + body.display_name + " " + room)
           redis.hset(`${room}:owner`, { id: body.id, name: body.display_name }, (err) => {
