@@ -118,7 +118,7 @@ func playNextTrack(access_token string, refresh_token string, room string, nextT
     return
   }
 
-  if(statusCode == 401 || statusCode == 403) {
+  if(statusCode == 401) {
     var token = refreshAccessToken(room, access_token, refresh_token, redisConnection)
     if(token != "") {
       playNextTrack(token, refresh_token, room, nextTrack, redisConnection)
@@ -191,7 +191,7 @@ func playSongForConnectedUser(room string, userId string, songUri string, redisC
     time.Sleep(1 * time.Second)
   }
 
-  if(statusCode == 401 || statusCode == 403) {
+  if(statusCode == 401) {
     var clientId = goDotEnvVariable("CLIENT_ID")
     var clientSecret = goDotEnvVariable("CLIENT_SECRET")
 

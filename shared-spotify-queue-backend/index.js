@@ -69,7 +69,7 @@ function playSongForConnectedUser(room, track, user_id, progress_ms = "0") {
         console.log("not found " + user_id + " " + response.statusCode)
         return
       }
-      if (error2 || (response.statusCode == 401 || response.statusCode == 403)) {
+      if (error2 || (response.statusCode == 401)) {
         console.log("error2 " + error2 + "response.StatusCode " + response.statusCode)
         console.log(response.statusCode)
         var client_id = process.env.CLIENT_ID
