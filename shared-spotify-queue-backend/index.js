@@ -30,7 +30,14 @@ function sendQueue(room) {
         for(var i = 0; i < Math.floor(results.length/3); i++) {
           index = i * 3
           song = results[index][1]
-          song.user = JSON.parse(song.user)
+          try {
+            song.user = JSON.parse(song.user)
+          } catch(err) {
+            console.log(err)
+            console.log(song)
+            console.log("broken")
+            song.user = {}
+          }
           song.upvotes = results[index+1][1].map(x => JSON.parse(x))
           song.downvotes = results[index+2][1].map(x => JSON.parse(x))
           queue.push(song)
