@@ -256,7 +256,14 @@ class Search extends React.Component {
     const { socket, user } = this.state;
     var message = {room: room, selectedOption: {...selectedOption, user: user}}
     socket.emit('add', message);
-    toast.info(`Added ${selectedOption["value"]} to the queue`);
+    toast.info(({ closeToast }) => {
+     return (
+      <>
+        <div><b>Added Song</b></div>
+        <div>{selectedOption["value"]}</div>
+      </>
+      )
+    });
   }
 
   deleteRoom = () => {
