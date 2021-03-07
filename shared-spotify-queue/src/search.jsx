@@ -83,6 +83,11 @@ class Search extends React.Component {
       this.setState({ connectedToRoom: data })
     })
 
+    socket.on('play error', data => {
+      console.log("play error")
+      toast.info("To get started, the owner must start playing music through their Spotify app", {autoClose: false})
+    })
+
     this.setState({ socket: socket }, this.joinRoom);
   }
 
@@ -253,8 +258,11 @@ class Search extends React.Component {
 
   onChange = (selectedOption) => {
     const { room } = this.props.match.params
-    const { socket, user } = this.state;
+    const { socket, user, currentSong, selectedOptions } = this.state;
     var message = {room: room, selectedOption: {...selectedOption, user: user}}
+    if(selectedOptions.length == 0 || !currentSong.value) {
+      toast.info("To get started, the owner must start playing music through their Spotify app", {autoClose: false})
+    }
     socket.emit('add', message);
     toast.info(({ closeToast }) => {
       return (
