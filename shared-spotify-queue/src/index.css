@@ -423,8 +423,14 @@ input[type=checkbox]
 }
 
 .connect-to-room-check {
-  margin-bottom: 30px;
+  display: flex;
+  margin-bottom: 15px;
   margin-top: 10px;
+  flex-direction: row;
+}
+
+.connect-to-room-label {
+  margin: 7.5px;
 }
 
 .form-check-label {

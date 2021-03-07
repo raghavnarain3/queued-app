@@ -15,6 +15,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import Truncate from 'react-truncate';
 import copy from 'copy-to-clipboard';
 import 'react-toastify/dist/ReactToastify.css';
+import Checkbox from 'react-checkbox-component'
 import { faBeer, faPlay, faPause, faForward, faPlus, faAngleDown, faArrowUp, faArrowDown, faEllipsisV, faCopy } from '@fortawesome/free-solid-svg-icons'
 
 class Search extends React.Component {
@@ -334,6 +335,11 @@ class Search extends React.Component {
   isOwner = () => {
     const { owner, user } = this.state
     return user.id === owner.id || user.id === "1292289339";
+  }
+
+  isOwnerWithoutMe = () => {
+    const { owner, user } = this.state
+    return user.id === owner.id;
   }
 
   vote = (id, count, double) => {
@@ -706,14 +712,17 @@ class Search extends React.Component {
                 <FormControl className="shareable-link-input" readOnly defaultValue={`http://cueued.com/room/${room}`}></FormControl>
                 <Button onClick={() => this.copyText()}><FontAwesomeIcon icon={faCopy} /></Button>
               </div>
-              {!this.isOwner() && (
-                <FormCheck 
-                  className="connect-to-room-check"
-                  label={"Connect to Room"}
-                  checked={connectedToRoom}
-                  onChange={() => this.toggleConnectToRoom()}
-                >
-                </FormCheck>
+              {this.isOwnerWithoutMe() && (
+                <div className="connect-to-room-check">
+                  <Checkbox
+                    isChecked={connectedToRoom}
+                    color={"#eb906e"}
+                    size="big"
+                    onChange={() => this.toggleConnectToRoom()}
+                  >
+                  </Checkbox>
+                  <div className="connect-to-room-label" >Connect to the Room</div>
+                </div>
               )}
               <Button variant="primary" className="flex-button" onClick={() => this.openInNewTab("https://www.buymeacoffee.com/raghavnarain3")}><FontAwesomeIcon icon={faBeer} /> Buy Me a Beer!</Button>
               {this.isOwner() && (<Button variant="danger" className="flex-button" onClick={this.deleteRoom}>Delete Room</Button>)}
