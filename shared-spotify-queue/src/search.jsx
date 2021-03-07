@@ -257,11 +257,11 @@ class Search extends React.Component {
     var message = {room: room, selectedOption: {...selectedOption, user: user}}
     socket.emit('add', message);
     toast.info(({ closeToast }) => {
-     return (
-      <>
-        <div><b>Added Song</b></div>
-        <div>{selectedOption["value"]}</div>
-      </>
+      return (
+        <>
+          <div><b>Added Song</b></div>
+          <div>{selectedOption["value"]}</div>
+        </>
       )
     });
   }
