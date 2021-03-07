@@ -212,6 +212,13 @@ io.on('connection', function (socket) {
       io.in(room).emit('users', socket_to_user[room]);
       sendQueue(room)
     });
+
+    redis.sismember('rooms_set', room, function(err, result) {
+      if(!result) {
+        socket.emit('no room', true)
+      }
+    });
+
   });
 
   socket.on('add', function (message) {

@@ -88,6 +88,11 @@ class Search extends React.Component {
       toast.info("To get started, the owner must start playing music through their Spotify app", {autoClose: false})
     })
 
+    socket.on('no room', data => {
+      console.log("play error")
+      toast.info("The room doesn't exist. Make sure you have the correct room code", {autoClose: false})
+    })
+
     this.setState({ socket: socket }, this.joinRoom);
   }
 
