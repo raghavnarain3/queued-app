@@ -727,7 +727,7 @@ class Search extends React.Component {
                 <FormControl className="shareable-link-input" readOnly defaultValue={`http://cueued.com/room/${room}`}></FormControl>
                 <Button onClick={() => this.copyText()}><FontAwesomeIcon icon={faCopy} /></Button>
               </div>
-              {this.isOwnerWithoutMe() && (
+              {!this.isOwnerWithoutMe() && (
                 <div className="connect-to-room-check">
                   <Checkbox
                     isChecked={connectedToRoom}
