@@ -364,6 +364,31 @@ io.on('connection', function (socket) {
     });
   })
 
+  socket.on('backup playlist', function (message) {
+    room = message['room']
+    playlist = message['playlist']
+    action = message['action']
+
+    if(action == "add") {
+      redis.set(`${room}:backup_playlist_uri`, playlist)
+      socket.emit('backup', {uri: playlist})
+    } else {
+      redis.del(`${room}:backup_playlist_uri`)
+      socket.emit('backup', {uri: null})
+    }
+  })
+
+  socket.on('is backup', function (message) {
+    room = message["room"]
+    playlist = message["playlist"]
+
+    redis.get(`${room}:backup_playlist_uri`, function(err, result) {
+      if(result) {
+        socket.emit('backup', {uri: result})
+      }
+    })
+  })
+
   socket.on('disconnect', function () {
     console.log('user disconnected');
   });

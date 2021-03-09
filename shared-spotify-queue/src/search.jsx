@@ -37,6 +37,7 @@ class Search extends React.Component {
     modalPlaylist: {},
     access_key: localStorage.getItem("ak"),
     connectedToRoom: false,
+    backup_playlist_uri: null
   }
 
   constructor(props) {
@@ -91,6 +92,11 @@ class Search extends React.Component {
     socket.on('no room', data => {
       console.log("play error")
       toast.info("The room doesn't exist. Make sure you have the correct room code", {autoClose: false})
+    })
+
+    socket.on('backup', data => {
+      console.log(data)
+      this.setState( { backup_playlist_uri: data.uri } )
     })
 
     this.setState({ socket: socket }, this.joinRoom);
@@ -194,7 +200,7 @@ class Search extends React.Component {
       .then(json => {
         if (json["items"]) {
           let results = json["items"].map((item) => (
-            { value: item["name"], artist: item["owner"]["display_name"], uri: item["tracks"]["href"], image: item.images[0] ? item.images[0].url : null }
+            { actual_uri: item["uri"], value: item["name"], artist: item["owner"]["display_name"], uri: item["tracks"]["href"], image: item.images[0] ? item.images[0].url : null }
           ))
           this.setState({ playlists: results })
         } else if (json.error.status === 401) {
@@ -246,6 +252,8 @@ class Search extends React.Component {
   }
 
   getPlaylistTracks = (value) => {
+    const { room, socket } = this.state
+    socket.emit('get backup', {room: room})
     this.setState({showPlaylistModal: true, modalPlaylist: value})
     if (!value.results) {
       this.getTracks(value.uri, []).then(tracks => {
@@ -265,7 +273,7 @@ class Search extends React.Component {
     const { room } = this.props.match.params
     const { socket, user, currentSong, selectedOptions } = this.state;
     var message = {room: room, selectedOption: {...selectedOption, user: user}}
-    if(selectedOptions.length == 0 || !currentSong.value) {
+    if(!currentSong.value) {
       toast.info("To get started, the owner must start playing music through their Spotify app", {autoClose: false})
     }
     socket.emit('add', message);
@@ -397,9 +405,19 @@ class Search extends React.Component {
     toast.info("Copied shareable url");
   }
 
+  toggleBackupPlaylist = (uri) => {
+    const { room } = this.props.match.params
+    const { socket, backup_playlist_uri } = this.state
+    if(backup_playlist_uri == uri) {
+      socket.emit('backup playlist', {room: room, playlist: uri, action: "remove"})
+    } else {
+      socket.emit('backup playlist', {room: room, playlist: uri, action: "add"})
+    }
+  }
+
   render() {
     const { room } = this.props.match.params
-    const { owner, user, selectedOptions, currentSong, tabName, query, searchResults, playlists, showModal, modalSong, showPlaylistModal, modalPlaylist, connectedToRoom } = this.state
+    const { owner, user, selectedOptions, currentSong, tabName, query, searchResults, playlists, showModal, modalSong, showPlaylistModal, modalPlaylist, connectedToRoom, backup_playlist_uri } = this.state
     const Row = ({ index, style }) => {
       return <div style={{
         ...style,
@@ -520,6 +538,18 @@ class Search extends React.Component {
                 </div>
               </div>
             </div>
+            {this.isOwnerWithoutMe() && (
+              <div className="connect-to-room-check">
+                <Checkbox
+                  isChecked={modalPlaylist.actual_uri === backup_playlist_uri}
+                  color={"#eb906e"}
+                  size="big"
+                  onChange={() => this.toggleBackupPlaylist(modalPlaylist.actual_uri)}
+                >
+                </Checkbox>
+                <div className="connect-to-room-label">Choose as your backup playlist</div>
+              </div>
+            )}
             <div className={"top-border-box"}>
               <div className={"flex-scrollable-modal"}>
                 {modalPlaylist["results"] && (
