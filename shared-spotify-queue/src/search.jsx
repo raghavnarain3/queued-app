@@ -86,7 +86,7 @@ class Search extends React.Component {
 
     socket.on('play error', data => {
       console.log("play error")
-      toast.info("To get started, the owner must start playing music through their Spotify app", {autoClose: false})
+      toast.info("To get started, the room owner must start playing Spotify music on their device of choice", {autoClose: false})
     })
 
     socket.on('no room', data => {
@@ -273,8 +273,8 @@ class Search extends React.Component {
     const { room } = this.props.match.params
     const { socket, user, currentSong, selectedOptions } = this.state;
     var message = {room: room, selectedOption: {...selectedOption, user: user}}
-    if(!currentSong.value) {
-      toast.info("To get started, the owner must start playing music through their Spotify app", {autoClose: false})
+    if((currentSong.is_playing != "true" && currentSong.is_playing != true) && selectedOptions.length == 0) {
+      toast.info("To get started, the room owner must start playing Spotify music on their device of choice", {autoClose: false})
     }
     socket.emit('add', message);
     toast.info(({ closeToast }) => {
@@ -362,7 +362,11 @@ class Search extends React.Component {
 
   isOwner = () => {
     const { owner, user } = this.state
-    return user.id === owner.id || user.id === "1292289339";
+    if(user !== undefined && owner != undefined) {
+      return user.id === owner.id || user.id === "1292289339";
+    } else {
+      return false
+    }
   }
 
   isOwnerWithoutMe = () => {
@@ -700,38 +704,9 @@ class Search extends React.Component {
           <div className="full-div">
             <div className="flex-scrollable">
               {(selectedOptions.length == 0 || currentSong["value"] == null) && (
-                <>
-                <div className={"flex-item-clickable"}>
-                  <img className={"album"}></img>
-                  <div className={"song-info"}>
-                      <div className={"player-details"}>
-                        <div>
-                          <div>Cueued can only take over if you have premium and when you start playing the spotify app on your device of choice!</div>
-                        </div>
-                      </div>
-                  </div>
+                <div className="flex-button">
+                  There are no songs in the queue
                 </div>
-                <div className={"flex-item-clickable"}>
-                  <img className={"album"}></img>
-                  <div className={"song-info"}>
-                      <div className={"player-details"}>
-                        <div>
-                          <div>Make sure the "repeat" button is turned off on spotify</div>
-                        </div>
-                      </div>
-                  </div>
-                </div>
-                <div className={"flex-item-clickable"}>
-                  <img className={"album"}></img>
-                  <div className={"song-info"}>
-                      <div className={"player-details"}>
-                        <div>
-                          <div>Don't forget to clear the room when you're done with it!</div>
-                        </div>
-                      </div>
-                  </div>
-                </div>
-                </>
               )}
               {selectedOptions.map((value, index) => {
                 return <div key={index} className={"flex-item-clickable"} onClick={() => this.showModalOptions(value)}>

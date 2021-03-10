@@ -112,16 +112,49 @@ func spotifyPlayRequest(accessToken string, songUri string) (int){
   return resp.StatusCode
 }
 
+func spotifyTurnOnShuffle(accessToken string) (int) {
+  url := "https://api.spotify.com/v1/me/player/shuffle?state=true"
+
+  req, err := http.NewRequest("PUT", url, nil)
+  if err != nil {
+    log.Println(err)
+  }
+  req.Header.Set("Authorization", "Bearer " + accessToken)
+  req.Header.Set("Content-Type", "application/json")
+  resp, err := http.DefaultClient.Do(req)
+  if err != nil {
+    log.Println(err)
+    return 500
+  }
+  defer resp.Body.Close()
+  
+  return resp.StatusCode
+}
+
+func spotifyTurnOffRepeat(accessToken string) (int) {
+  url := "https://api.spotify.com/v1/me/player/repeat?state=off"
+
+  req, err := http.NewRequest("PUT", url, nil)
+  if err != nil {
+    log.Println(err)
+  }
+  req.Header.Set("Authorization", "Bearer " + accessToken)
+  req.Header.Set("Content-Type", "application/json")
+  resp, err := http.DefaultClient.Do(req)
+  if err != nil {
+    log.Println(err)
+    return 500
+  }
+  defer resp.Body.Close()
+  
+  return resp.StatusCode
+}
+
 
 func spotifyPlayRequestPlaylist(accessToken string, playlistUri string) (int){
   url := "https://api.spotify.com/v1/me/player/play"
   playlistJson := PlaylistJson{ ContextUri: playlistUri }
   reqJson, _ := json.Marshal(playlistJson)
-  log.Println(playlistJson)
-  var v interface{}
-  json.Unmarshal(reqJson, &v)
-  log.Println("hmmmm")
-  log.Println(v)
 
   req, err := http.NewRequest("PUT", url, bytes.NewBuffer(reqJson))
   if err != nil {
@@ -141,7 +174,7 @@ func spotifyPlayRequestPlaylist(accessToken string, playlistUri string) (int){
 
 func playNextTrack(access_token string, refresh_token string, room string, nextUri string, redisConnection redis.Conn) {
   var statusCode = spotifyPlayRequest(access_token, nextUri)
-  fmt.Println("playing song for main user")
+  fmt.Println("playing song for main user in room " + room)
   fmt.Println(statusCode)
 
   if(statusCode == 404) {
@@ -182,9 +215,12 @@ func playNextTrack(access_token string, refresh_token string, room string, nextU
 }
 
 func playPlaylist(access_token string, refresh_token string, room string, playlistUri string, redisConnection redis.Conn) {
+  var shuffleStatusCode = spotifyTurnOnShuffle(access_token)
   var statusCode = spotifyPlayRequestPlaylist(access_token, playlistUri)
-  fmt.Println("playing playlist for main user")
-  fmt.Println(statusCode)
+  log.Println("shuffle status code " + room)
+  log.Println(shuffleStatusCode)
+  log.Println("playing playlist for main user " + room)
+  log.Println(statusCode)
 
   if(statusCode == 404) {
     log.Println("Cant find room for main user " + room)
@@ -424,6 +460,11 @@ func updateRoom(room string) {
   if err != nil {
     log.Println(err)
   }
+  err = conn.Send("GET", room+":toggled_loop")
+  if err != nil {
+    log.Println(err)
+  }
+
   err = conn.Send("DEL", room+":next")
   if err != nil {
     log.Println(err)
@@ -470,18 +511,23 @@ func updateRoom(room string) {
   backup_playlist_uri, backup_err := redis.String(replies[5], err)
   if backup_err == redis.ErrNil {
   } else if backup_err == redis.ErrNil {
-    log.Println(err)
+    log.Println(backup_err)
   }
 
   playing_playlist, playlist_err := redis.String(replies[6], err)
   if playlist_err == redis.ErrNil {
   } else if playlist_err == redis.ErrNil {
-    log.Println(err)
+    log.Println(playlist_err)
   }
 
+  _, loop_error := redis.String(replies[7], err)
+  if loop_error == redis.ErrNil {
+  } else if loop_error == redis.ErrNil {
+    log.Println(loop_error)
+  }
+
+
   if(len(queue) == 0 && backup_err != redis.ErrNil && playing_playlist != "true" && (currentSong.Progress == "0" || currentSong.Progress == "-1")) {
-    log.Println("progress")
-    log.Println(currentSong.Progress)
     playPlaylist(access_token, refresh_token, room, backup_playlist_uri, conn)
     _, err := conn.Do("SET", room+":playing_playlist", "true")
     if err != nil {
@@ -493,6 +539,14 @@ func updateRoom(room string) {
   if(len(queue) > 0 || currentSong.Progress != "-1") {
     data := getCurrentlyPlaying(room, access_token)
     if data != nil && data["item"] != nil {
+      if(loop_error == redis.ErrNil) {
+        spotifyTurnOffRepeat(access_token)
+        _, err := conn.Do("SET", room+":toggled_loop", "true")
+        if err != nil {
+          log.Println(err)
+        }
+      }
+
       var uri = data["item"].(map[string]interface{})["uri"];
       var name = data["item"].(map[string]interface{})["name"]
       var artist = data["item"].(map[string]interface{})["artists"].([]interface{})[0].(map[string]interface{})["name"]

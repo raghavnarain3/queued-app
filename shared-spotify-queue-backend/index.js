@@ -280,6 +280,9 @@ io.on('connection', function (socket) {
     multi.del(`${room}:refresh_token`)
     multi.del(`${room}:current_song`)
     multi.del(`${room}:owner`)
+    multi.del(`${room}:backup_playlist_uri`)
+    multi.del(`${room}:playing_playlist`)
+    multi.del(`${room}:toggled_loop`)
     multi.exec()
     redis.smembers(`${room}:shared-listen`, function(err, results) {
       for(user_id of results) {
@@ -378,9 +381,8 @@ io.on('connection', function (socket) {
     }
   })
 
-  socket.on('is backup', function (message) {
+  socket.on('get backup', function (message) {
     room = message["room"]
-    playlist = message["playlist"]
 
     redis.get(`${room}:backup_playlist_uri`, function(err, result) {
       if(result) {
