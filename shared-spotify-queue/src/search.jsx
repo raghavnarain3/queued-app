@@ -253,7 +253,8 @@ class Search extends React.Component {
   }
 
   getPlaylistTracks = (value) => {
-    const { room, socket } = this.state
+    const { room } = this.props.match.params
+    const { socket } = this.state
     socket.emit('get backup', {room: room})
     this.setState({showPlaylistModal: true, modalPlaylist: value})
     if (!value.results) {
