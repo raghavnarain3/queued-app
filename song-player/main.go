@@ -540,10 +540,13 @@ func updateRoom(room string) {
     data := getCurrentlyPlaying(room, access_token)
     if data != nil && data["item"] != nil {
       if(loop_error == redis.ErrNil) {
-        spotifyTurnOffRepeat(access_token)
-        _, err := conn.Do("SET", room+":toggled_loop", "true")
-        if err != nil {
-          log.Println(err)
+        var code = spotifyTurnOffRepeat(access_token)
+        if (code == 204) {
+          log.Println("turned off repeat " + room)
+           _, err := conn.Do("SET", room+":toggled_loop", "true")
+          if err != nil {
+            log.Println(err)
+          }
         }
       }
 
