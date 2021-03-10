@@ -16,7 +16,8 @@ import Truncate from 'react-truncate';
 import copy from 'copy-to-clipboard';
 import 'react-toastify/dist/ReactToastify.css';
 import Checkbox from 'react-checkbox-component'
-import { faBeer, faPlay, faPause, faForward, faPlus, faAngleDown, faArrowUp, faArrowDown, faEllipsisV, faCopy } from '@fortawesome/free-solid-svg-icons'
+import { faBeer, faPlay, faPause, faForward, faPlus, faAngleDown, faArrowUp, faArrowDown, faEllipsisV, faCopy, faVolumeUp, faTwitterSquare } from '@fortawesome/free-solid-svg-icons'
+import { faTwitter } from "@fortawesome/free-brands-svg-icons"
 
 class Search extends React.Component {
   state = {
@@ -371,7 +372,11 @@ class Search extends React.Component {
 
   isOwnerWithoutMe = () => {
     const { owner, user } = this.state
-    return user.id === owner.id;
+    if(user !== undefined && owner != undefined) {
+      return user.id === owner.id;
+    } else {
+      return false
+    }
   }
 
   vote = (id, count, double) => {
@@ -421,7 +426,7 @@ class Search extends React.Component {
 
   render() {
     const { room } = this.props.match.params
-    const { owner, user, selectedOptions, currentSong, tabName, query, searchResults, playlists, showModal, modalSong, showPlaylistModal, modalPlaylist, connectedToRoom, backup_playlist_uri } = this.state
+    const { owner, user, users, selectedOptions, currentSong, tabName, query, searchResults, playlists, showModal, modalSong, showPlaylistModal, modalPlaylist, connectedToRoom, backup_playlist_uri } = this.state
     const Row = ({ index, style }) => {
       return <div style={{
         ...style,
@@ -703,7 +708,7 @@ class Search extends React.Component {
         {tabName === "queue" && (
           <div className="full-div">
             <div className="flex-scrollable">
-              {(selectedOptions.length == 0 || currentSong["value"] == null) && (
+              {selectedOptions.length == 0 && (
                 <div className="flex-button">
                   There are no songs in the queue
                 </div>
@@ -749,7 +754,20 @@ class Search extends React.Component {
                   <div className="connect-to-room-label" >Connect to the Room</div>
                 </div>
               )}
+              <div className="votes-list">
+                <div>Users in Room:</div>
+                {users.map((u, index) => {
+                  return <div key={index} className={"user-list-item"}>
+                    <img className={"user-img"} src={this.getImage(u.img)}></img>
+                    <div className={"user-name"}>{u.name}</div>
+                    {(u.connected || u.id == owner.id) && (
+                      <FontAwesomeIcon className="sound" icon={faVolumeUp} />
+                    )}
+                  </div>
+                })}
+              </div>
               <Button variant="primary" className="flex-button" onClick={() => this.openInNewTab("https://www.buymeacoffee.com/raghavnarain3")}><FontAwesomeIcon icon={faBeer} /> Buy Me a Beer!</Button>
+              <Button variant="secondary" className="flex-button" onClick={() => this.openInNewTab("https://twitter.com/raghusauce")}><FontAwesomeIcon icon={faTwitter} /> Message Me on Twitter!</Button>
               {this.isOwner() && (<Button variant="danger" className="flex-button" onClick={this.deleteRoom}>Delete Room</Button>)}
             </div>
           </div>

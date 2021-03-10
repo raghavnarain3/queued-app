@@ -324,6 +324,29 @@ code {
   box-shadow: none!important;
 }
 
+.btn-secondary {
+  background-color: #1DA1F2!important;
+  border-color: #1DA1F2!important;
+}
+
+.btn-secondary:hover{
+  background: #0d95e8!important;
+  outline: none;
+  box-shadow: #1DA1F2!important;
+}
+
+.btn-secondary:focus{
+  background: #1DA1F2!important;
+  outline: none;
+  box-shadow: none!important;
+}
+
+.btn-secondary:active{
+  background: #cc7e61!important;
+  outline: none;
+  box-shadow: none!important;
+}
+
 .modal-content {
   background-color: #1b1c23!important;
 }
@@ -435,4 +458,8 @@ input[type=checkbox]
 
 .form-check-label {
   margin-left: 15px;
+}
+
+.sound {
+  margin-top: 5.13px;
 }

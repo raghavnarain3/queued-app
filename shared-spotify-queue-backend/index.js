@@ -209,7 +209,8 @@ io.on('connection', function (socket) {
 
     socket_to_user[room][socket.id] = user;
     socket.join(room, () => {
-      io.in(room).emit('users', socket_to_user[room]);
+      users = Object.keys(socket_to_user[room]).map(function(key){ return socket_to_user[room][key] });
+      io.in(room).emit('users', users);
       sendQueue(room)
     });
 
@@ -363,7 +364,10 @@ io.on('connection', function (socket) {
       } catch (err) {
         console.log(err);
       }
-      io.in(room).emit('users', socket_to_user[room]);
+      if(socket_to_user && socket_to_user[room]) {
+        users = Object.keys(socket_to_user[room]).map(function(key){ return socket_to_user[room][key] });
+        io.in(room).emit('users', users);
+      }
     });
   })
 
@@ -403,8 +407,18 @@ io.on('connection', function (socket) {
     redis.sismember(`${room}:shared-listen`, user_id, function(err, result) {
       if(result) {
         socket.emit('connected in room', true)
+        if(socket_to_user[room] && socket_to_user[room][socket.id]) {
+          socket_to_user[room][socket.id].connected = true
+          users = Object.keys(socket_to_user[room]).map(function(key){ return socket_to_user[room][key] });
+          io.in(room).emit('users', users);
+        } 
       } else {
         socket.emit('connected in room', false)
+        if(socket_to_user[room] && socket_to_user[room][socket.id]) {
+          socket_to_user[room][socket.id].connected = false
+          users = Object.keys(socket_to_user[room]).map(function(key){ return socket_to_user[room][key] });
+          io.in(room).emit('users', users);
+        } 
       }
     }) 
   });
@@ -416,6 +430,11 @@ io.on('connection', function (socket) {
     should_connect = message.should_connect
 
     if (should_connect) {
+      if(socket_to_user[room] && socket_to_user[room][socket.id]) {
+        socket_to_user[room][socket.id].connected = true
+        users = Object.keys(socket_to_user[room]).map(function(key){ return socket_to_user[room][key] });
+        io.in(room).emit('users', users);
+      } 
       user_keys = { "access_key": message.access_key, "refresh_key": message.refresh_key }
       redis.multi().sadd(`${room}:shared-listen`, user_id).hset(`${room}:connected-user:${user_id}`, user_keys).exec(function(err, result) {
         redis.hgetall(`${room}:current_song`, function(error, current_song) {
@@ -425,6 +444,11 @@ io.on('connection', function (socket) {
         })
       })
     } else {
+      if(socket_to_user[room] && socket_to_user[room][socket.id]) {
+        socket_to_user[room][socket.id].connected = false
+        users = Object.keys(socket_to_user[room]).map(function(key){ return socket_to_user[room][key] });
+        io.in(room).emit('users', users);
+      } 
       redis.multi().srem(`${room}:shared-listen`, user_id).del(`${room}:connected-user:${user_id}`).exec()
     }
   });
