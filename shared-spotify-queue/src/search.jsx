@@ -16,7 +16,7 @@ import Truncate from 'react-truncate';
 import copy from 'copy-to-clipboard';
 import 'react-toastify/dist/ReactToastify.css';
 import Checkbox from 'react-checkbox-component'
-import { faBeer, faPlay, faPause, faForward, faPlus, faAngleDown, faArrowUp, faArrowDown, faEllipsisV, faCopy, faVolumeUp, faTwitterSquare } from '@fortawesome/free-solid-svg-icons'
+import { faBeer, faPlay, faPause, faForward, faPlus, faAngleDown, faArrowUp, faArrowDown, faEllipsisV, faCopy, faVolumeUp, faTwitterSquare, faInfoCircle } from '@fortawesome/free-solid-svg-icons'
 import { faTwitter } from "@fortawesome/free-brands-svg-icons"
 
 class Search extends React.Component {
@@ -38,7 +38,8 @@ class Search extends React.Component {
     modalPlaylist: {},
     access_key: localStorage.getItem("ak"),
     connectedToRoom: false,
-    backup_playlist_uri: null
+    backup_playlist_uri: null,
+    learnMoreModal: false
   }
 
   constructor(props) {
@@ -355,6 +356,14 @@ class Search extends React.Component {
     this.setState({ showPlaylistModal: false})
   }
 
+  showLearnMore = () => {
+    this.setState({ learnMoreModal: true})
+  }
+
+  handleCloseLearnMore = () => {
+    this.setState({ learnMoreModal: false})
+  }
+
   toggleConnectToRoom = () => {
     const { room } = this.props.match.params
     const { connectedToRoom, access_key, socket, user } = this.state;
@@ -427,7 +436,7 @@ class Search extends React.Component {
 
   render() {
     const { room } = this.props.match.params
-    const { owner, user, users, selectedOptions, currentSong, tabName, query, searchResults, playlists, showModal, modalSong, showPlaylistModal, modalPlaylist, connectedToRoom, backup_playlist_uri } = this.state
+    const { owner, user, users, selectedOptions, currentSong, tabName, query, searchResults, playlists, showModal, modalSong, showPlaylistModal, modalPlaylist, connectedToRoom, backup_playlist_uri, learnMoreModal } = this.state
     const Row = ({ index, style }) => {
       return <div style={{
         ...style,
@@ -467,6 +476,26 @@ class Search extends React.Component {
         pauseOnHover
       />
       <div className={"flex-container"}>
+        <Modal show={learnMoreModal} onHide={() => this.handleCloseLearnMore()}>
+          <Modal.Header closeButton>
+            <Modal.Title as="b">
+              How To Use Cueued
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <div className="steps"> <b>Cueued creates a collaborative queue for your Spotify that allows multiple people to determine what music gets played next.</b></div>
+            <div className="steps"> <b>To get started:</b></div>
+            <div className="steps"> 1. Start playing Spotify music on your device of choice (phone, smart device, TV, ipad, etc)</div>
+            <div className="steps"> 2. Create a room through cueued (you must have Spotify premium)</div>
+            <div className="steps"> 3. Share the room link to your friends (they don't need premium)</div>
+            <div className="steps"> 4. Add songs to the queue</div>
+            <div className="steps"> 5. The music on your device should now be taken over by cueued!</div>
+            <div className="steps"> 6. Go to the queue and upvote/downvote songs to determine what gets played next</div>
+            <div className="steps"> 7. The creator of the room can look through their playlists and choose one of them as backup in case the queue gets empty</div>
+            <div className="steps"> 8. If your friends are remote and and want to listen to the cueued, they can start playing Spotify from their devince, click Connect To Room in the Settings and then be able to listen remotely! (they must have Spotify premium)</div>
+            <div className="steps"> 9. Once you're done with the session, don't forget to delete the room in the Settings!</div>
+          </Modal.Body>
+        </Modal>
         <Modal show={showModal} onHide={this.handleCloseModal}>
           <Modal.Header closeButton>
             <Modal.Title as="b">
@@ -581,7 +610,12 @@ class Search extends React.Component {
             </div>
           </Modal.Body>
         </Modal>
-        <div>{owner.name}'s Room: <b>{room}</b></div>
+        <div onClick={() => this.showLearnMore()}>
+          {owner.name}'s Room: <b>{room} {' '}</b>
+          <span className={"control-fa"}>
+            <FontAwesomeIcon icon={faInfoCircle}></FontAwesomeIcon>
+          </span>
+        </div>
         {!this.showNowPlaying() && (
           <div className={"now-playing"}>
             <div className={"flex-item"}>
@@ -767,6 +801,7 @@ class Search extends React.Component {
                   </div>
                 })}
               </div>
+              <Button variant="primary" className="flex-button" onClick={() => this.showLearnMore()}><FontAwesomeIcon icon={faInfoCircle} /> Instructions</Button>
               <Button variant="primary" className="flex-button" onClick={() => this.openInNewTab("https://www.buymeacoffee.com/raghavnarain3")}><FontAwesomeIcon icon={faBeer} /> Buy Me a Beer!</Button>
               <Button variant="secondary" className="flex-button" onClick={() => this.openInNewTab("https://twitter.com/raghusauce")}><FontAwesomeIcon icon={faTwitter} /> Message Me on Twitter!</Button>
               {this.isOwner() && (<Button variant="danger" className="flex-button" onClick={this.deleteRoom}>Delete Room</Button>)}
