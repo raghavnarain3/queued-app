@@ -39,7 +39,7 @@ class Search extends React.Component {
     access_key: localStorage.getItem("ak"),
     connectedToRoom: false,
     backup_playlist_uri: null,
-    learnMoreModal: false
+    learnMoreModal: true
   }
 
   constructor(props) {
